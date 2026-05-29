@@ -21,6 +21,12 @@ The Policy Administration System is the **core insurance platform** for Acme Ins
 - **Purpose:** Read-only REST API for modern system integration
 - **Deployment:** Docker container on Linux VM (not on z/OS)
 
+### Java Batch — Premium Calculation (Replaces COBOL PREMBAT)
+- **Language:** Java 17
+- **Framework:** Spring Boot 3.3 / Spring Batch 5
+- **Purpose:** Recalculates premiums for all active policies (replaces `PREMBAT` program and `PREMIUM-BATCH.jcl`)
+- **Deployment:** Docker container or standalone JAR
+
 ## CICS Transactions
 
 | Transaction | Program | Description |
@@ -74,6 +80,50 @@ GET /manage/health                              - Health check
 5. **Java facade has no authentication** - Relies on network segmentation (internal VPN only)
 6. **Single-threaded batch** - PREMBAT processes policies sequentially; takes ~4 hours for full book
 7. **FTP file transfer** - No encryption on daily extract files (regulatory risk)
+
+## Java Batch Module (`java-batch/`)
+
+The `java-batch/` module is a Spring Boot 3.3 / Spring Batch 5 application that replaces the COBOL `PREMBAT` batch program and `PREMIUM-BATCH.jcl` job.
+
+### Key improvements over the COBOL version
+
+1. **Externalized configuration** — base rates, tax rate, and surcharge are in `application.yml` instead of hardcoded in COBOL
+2. **Multi-threaded processing** — configurable `TaskExecutor` parallelizes chunk processing (addresses the ~4-hour sequential runtime)
+3. **Chunk-based commits** — batch commits in configurable chunks (default 100) instead of row-by-row
+4. **Territory factor loading** — loads and applies territory factors from DB2 (COBOL version had this stubbed)
+5. **Modern date handling** — uses `java.time.LocalDate` instead of integer date arithmetic
+
+### Build & Run
+
+```bash
+# Build (requires Java 17+)
+cd java-batch
+mvn package
+
+# Run against DB2
+java -jar target/pas-batch-1.0.0.jar
+
+# Run with Docker
+docker build -t pas-batch .
+docker run -e DB2_USERNAME=user -e DB2_PASSWORD=pass pas-batch
+```
+
+### Configuration (`application.yml`)
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `premium.tax-rate` | `0.0350` | Tax rate applied to modified premium |
+| `premium.surcharge` | `25.00` | Flat regulatory surcharge per policy |
+| `premium.base-rates.*` | varies | Base rate per policy type (AUT, HOM, COM, LIF, HLT) |
+| `premium.chunk-size` | `100` | Number of policies per batch commit |
+| `premium.concurrency` | `4` | Number of parallel processing threads |
+
+### Tests
+
+```bash
+cd java-batch
+mvn test
+```
 
 ## Source Control
 
