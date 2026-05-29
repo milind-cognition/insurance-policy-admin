@@ -21,6 +21,12 @@ The Policy Administration System is the **core insurance platform** for Acme Ins
 - **Purpose:** Read-only REST API for modern system integration
 - **Deployment:** Docker container on Linux VM (not on z/OS)
 
+### Premium Batch (Java) — Replaces COBOL PREMBAT
+- **Language:** Java 17
+- **Framework:** Spring Boot 3.3 / Spring Batch 5
+- **Purpose:** Recalculates premiums for all active policies (replaces `PREMBAT.cbl` and `PREMIUM-BATCH.jcl`)
+- **Deployment:** Docker container or standalone JAR
+
 ## CICS Transactions
 
 | Transaction | Program | Description |
@@ -74,6 +80,44 @@ GET /manage/health                              - Health check
 5. **Java facade has no authentication** - Relies on network segmentation (internal VPN only)
 6. **Single-threaded batch** - PREMBAT processes policies sequentially; takes ~4 hours for full book
 7. **FTP file transfer** - No encryption on daily extract files (regulatory risk)
+
+## Java Premium Batch Module (`java-batch/`)
+
+This module is the modern Java replacement for the COBOL `PREMBAT` program and the `PREMIUM-BATCH.jcl` batch job. It uses Spring Boot 3.3 and Spring Batch 5 to recalculate premiums for all active policies.
+
+### Key improvements over the COBOL version
+
+1. **Externalized configuration** — base rates, tax rate, and surcharge are in `application.yml` instead of hardcoded in COBOL
+2. **Multi-threaded processing** — Spring Batch `TaskExecutor` parallelizes chunks to address the 4-hour runtime bottleneck
+3. **Chunk-based processing** — batch commits in configurable chunks (default 100) instead of row-by-row
+4. **Proper territory factor loading** — loads and applies territory factors from DB2 (the COBOL version has this stubbed)
+5. **Modern date handling** — uses `java.time.LocalDate` instead of integer arithmetic (avoids leap year bugs)
+
+### Build and run
+
+```bash
+# Build (requires Java 17+)
+cd java-batch
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+mvn clean package
+
+# Run with DB2
+java -jar target/pas-premium-batch-1.0.0.jar \
+  --spring.datasource.url=jdbc:db2://localhost:50000/ACMEINS \
+  --spring.datasource.username=PASFACAD \
+  --spring.datasource.password=changeme
+
+# Run with Docker
+docker build -t pas-premium-batch .
+docker run -e DB2_USERNAME=PASFACAD -e DB2_PASSWORD=changeme pas-premium-batch
+```
+
+### Run tests
+
+```bash
+cd java-batch
+mvn test
+```
 
 ## Source Control
 
