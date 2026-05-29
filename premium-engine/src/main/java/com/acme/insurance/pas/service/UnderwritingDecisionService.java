@@ -144,7 +144,7 @@ public class UnderwritingDecisionService {
     )
     public int applyLossRatioAdjustment(int riskScore, BigDecimal totalIncurred,
                                         BigDecimal totalPremium) {
-        if (totalPremium != null && totalPremium.compareTo(BigDecimal.ZERO) > 0) {
+        if (totalPremium != null && totalIncurred != null && totalPremium.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal lossRatio = totalIncurred
                     .divide(totalPremium, 4, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal("100"));

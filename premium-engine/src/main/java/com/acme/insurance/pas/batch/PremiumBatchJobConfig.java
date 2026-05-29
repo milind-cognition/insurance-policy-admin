@@ -1,6 +1,7 @@
 package com.acme.insurance.pas.batch;
 
 import com.acme.insurance.pas.entity.Policy;
+import com.acme.insurance.pas.repository.PolicyRepository;
 import com.acme.insurance.pas.service.PremiumCalculationService;
 import com.acme.insurance.pas.service.PremiumCalculationService.PremiumResult;
 import jakarta.persistence.EntityManagerFactory;
@@ -39,11 +40,14 @@ public class PremiumBatchJobConfig {
     private static final int CHUNK_SIZE = 50;
 
     private final PremiumCalculationService premiumCalculationService;
+    private final PolicyRepository policyRepository;
     private final EntityManagerFactory entityManagerFactory;
 
     public PremiumBatchJobConfig(PremiumCalculationService premiumCalculationService,
+                                 PolicyRepository policyRepository,
                                  EntityManagerFactory entityManagerFactory) {
         this.premiumCalculationService = premiumCalculationService;
+        this.policyRepository = policyRepository;
         this.entityManagerFactory = entityManagerFactory;
     }
 
@@ -75,8 +79,9 @@ public class PremiumBatchJobConfig {
     public ItemWriter<PremiumResult> premiumWriter() {
         return chunk -> {
             for (PremiumResult result : chunk.getItems()) {
-                Policy policy = new Policy();
-                policy.setPolicyNumber(result.policyNumber());
+                Policy policy = policyRepository.findById(result.policyNumber())
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Policy not found: " + result.policyNumber()));
                 premiumCalculationService.persistPremiumResult(policy, result);
                 log.info("{} PREMIUM: {}", result.policyNumber(), result.finalPremium());
             }
