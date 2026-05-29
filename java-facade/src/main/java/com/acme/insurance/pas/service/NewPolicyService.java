@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -78,8 +79,16 @@ public class NewPolicyService {
                 || request.getPolicyType().trim().isEmpty()) {
             throw new IllegalArgumentException("POLICY TYPE IS REQUIRED");
         }
-        if (request.getEffectiveDate() != null
-                && request.getEffectiveDate().before(new Date())) {
+        if (request.getEffectiveDate() == null) {
+            throw new IllegalArgumentException(
+                    "EFFECTIVE DATE IS REQUIRED");
+        }
+        if (request.getExpiryDate() == null) {
+            throw new IllegalArgumentException(
+                    "EXPIRY DATE IS REQUIRED");
+        }
+        if (truncateToDate(request.getEffectiveDate())
+                .before(truncateToDate(new Date()))) {
             throw new IllegalArgumentException(
                     "EFFECTIVE DATE CANNOT BE IN PAST");
         }
@@ -199,5 +208,18 @@ public class NewPolicyService {
         coverage.setStatus("AC");
 
         policyRepository.insertCoverage(coverage);
+    }
+
+    /**
+     * Truncates a Date to midnight, matching COBOL YYYYMMDD date-only comparison.
+     */
+    private Date truncateToDate(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 }
