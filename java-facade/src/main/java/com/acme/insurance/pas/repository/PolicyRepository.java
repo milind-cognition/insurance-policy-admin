@@ -2,6 +2,7 @@ package com.acme.insurance.pas.repository;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.Premium;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -39,6 +40,25 @@ public class PolicyRepository {
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
 
+    private static final String FIND_ACTIVE_POLICIES_SQL =
+            "SELECT POLICY_NUMBER, POLICY_TYPE, POLICY_STATUS, " +
+            "EFFECTIVE_DATE, EXPIRY_DATE, POLICYHOLDER_ID, " +
+            "AGENT_CODE, BRANCH_CODE, TOTAL_PREMIUM, DEDUCTIBLE, " +
+            "COVERAGE_LIMIT, INCEPTION_DATE, RENEWAL_COUNT, " +
+            "UW_STATUS, RISK_SCORE, WEB_INDICATOR, API_FLAG, " +
+            "LAST_UPDATED, UPDATED_BY " +
+            "FROM ACMEINS.POLICIES " +
+            "WHERE POLICY_STATUS = 'AC' " +
+            "ORDER BY POLICY_NUMBER";
+
+    private static final String INSERT_PREMIUM_SQL =
+            "INSERT INTO ACMEINS.PREMIUMS " +
+            "(POLICY_NUMBER, COVERAGE_SEQ, TERM_EFFECTIVE_DATE, TERM_EXPIRY_DATE, " +
+            "BASE_RATE, TERRITORY_FACTOR, CLASS_FACTOR, EXPERIENCE_MOD, " +
+            "SCHEDULE_MOD, DISCOUNT_PCT, SURCHARGE_AMT, TAX_AMT, " +
+            "TOTAL_PREMIUM, INSTALLMENT_CODE, CALC_DATE, CALC_BY) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
             "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, " +
@@ -57,6 +77,32 @@ public class PolicyRepository {
             return null;
         }
         return results.get(0);
+    }
+
+    public List<Policy> findAllActivePolicies() {
+        return jdbcTemplate.query(
+                FIND_ACTIVE_POLICIES_SQL,
+                new PolicyRowMapper());
+    }
+
+    public void insertPremium(Premium premium) {
+        jdbcTemplate.update(INSERT_PREMIUM_SQL,
+                premium.getPolicyNumber(),
+                premium.getCoverageSeq(),
+                premium.getTermEffectiveDate(),
+                premium.getTermExpiryDate(),
+                premium.getBaseRate(),
+                premium.getTerritoryFactor(),
+                premium.getClassFactor(),
+                premium.getExperienceMod(),
+                premium.getScheduleMod(),
+                premium.getDiscountPct(),
+                premium.getSurchargeAmt(),
+                premium.getTaxAmt(),
+                premium.getTotalPremium(),
+                premium.getInstallmentCode(),
+                premium.getCalcDate(),
+                premium.getCalcBy());
     }
 
     public List<Coverage> findCoveragesByPolicyNumber(String policyNumber) {
