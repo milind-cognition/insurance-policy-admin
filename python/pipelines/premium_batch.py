@@ -255,7 +255,26 @@ def _run_partition_with_engine(
         " :total_premium, 'AN', :calc_date, 'PREMBAT')"
     )
 
+    delete_sql = text(
+        "DELETE FROM PREMIUMS "
+        "WHERE CALC_BY = 'PREMBAT' "
+        "  AND CALC_DATE = :calc_date "
+        "  AND POLICY_NUMBER IN ("
+        "    SELECT POLICY_NUMBER FROM POLICIES "
+        "    WHERE POLICY_TYPE = :policy_type AND POLICY_STATUS = 'AC'"
+        "  )"
+    )
+
     with engine.connect() as conn:
+        del_result = conn.execute(
+            delete_sql, {"calc_date": calc_date, "policy_type": policy_type},
+        )
+        conn.commit()
+        deleted = del_result.rowcount
+        if deleted:
+            log.info("Partition %s: cleared %d stale rows for calc_date=%s",
+                     policy_type, deleted, calc_date)
+
         rows = conn.execute(select_sql, {"policy_type": policy_type}).fetchall()
         result.policies_read = len(rows)
         log.info("Partition %s: %d policies to process", policy_type, len(rows))
