@@ -41,6 +41,9 @@ public class PolicyRepository {
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
 
+    private static final String FIND_POLICY_FOR_UPDATE_SQL =
+            FIND_POLICY_SQL + " FOR UPDATE";
+
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
             "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, " +
@@ -69,6 +72,17 @@ public class PolicyRepository {
     public Policy findByPolicyNumber(String policyNumber) {
         List<Policy> results = jdbcTemplate.query(
                 FIND_POLICY_SQL,
+                new Object[]{policyNumber},
+                new PolicyRowMapper());
+        if (results.isEmpty()) {
+            return null;
+        }
+        return results.get(0);
+    }
+
+    public Policy findByPolicyNumberForUpdate(String policyNumber) {
+        List<Policy> results = jdbcTemplate.query(
+                FIND_POLICY_FOR_UPDATE_SQL,
                 new Object[]{policyNumber},
                 new PolicyRowMapper());
         if (results.isEmpty()) {

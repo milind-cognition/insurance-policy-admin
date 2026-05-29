@@ -50,8 +50,8 @@ public class PolicyEndorsementService {
         // 1000-INITIALIZE
         Date currentDate = new Date();
 
-        // 2000-RECEIVE-ENDORSEMENT
-        Policy policy = policyRepository.findByPolicyNumber(policyNumber);
+        // 2000-RECEIVE-ENDORSEMENT (FOR UPDATE replicates COBOL WITH RS USE AND KEEP UPDATE LOCKS)
+        Policy policy = policyRepository.findByPolicyNumberForUpdate(policyNumber);
         if (policy == null) {
             throw new IllegalArgumentException("POLICY NOT FOUND");
         }
