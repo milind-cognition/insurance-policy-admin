@@ -1,5 +1,6 @@
 package com.acme.insurance.pas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
 
 /**
@@ -25,10 +26,13 @@ public class Customer {
     private String phone;
     private String email;
     private Date dateOfBirth;
+    @JsonIgnore
     private String ssnLast4;
+    @JsonIgnore
     private String taxId;
     private int creditScore;
     private String riskTier;
+    @JsonIgnore
     private String gdprConsent;
     private Date createdDate;
     private Date lastUpdated;
