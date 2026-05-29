@@ -1,13 +1,18 @@
 package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.model.EndorsementRequest;
+import com.acme.insurance.pas.model.EndorsementResponse;
 import com.acme.insurance.pas.model.Policy;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.EndorsementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,6 +41,9 @@ public class PolicyController {
     @Autowired
     private PolicyRepository policyRepository;
 
+    @Autowired
+    private EndorsementService endorsementService;
+
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {
         Policy policy = policyRepository.findByPolicyNumber(policyNumber);
@@ -56,5 +64,21 @@ public class PolicyController {
         List<Coverage> coverages = policyRepository.findCoveragesByPolicyNumber(
                 policyNumber);
         return new ResponseEntity<List<Coverage>>(coverages, HttpStatus.OK);
+    }
+
+    @PostMapping("/{policyNumber}/endorsements")
+    public ResponseEntity<EndorsementResponse> createEndorsement(
+            @PathVariable String policyNumber,
+            @RequestBody EndorsementRequest request) {
+        try {
+            request.setPolicyNumber(policyNumber);
+            EndorsementResponse response = endorsementService.processEndorsement(request);
+            if (response == null) {
+                return new ResponseEntity<EndorsementResponse>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<EndorsementResponse>(response, HttpStatus.CREATED);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<EndorsementResponse>(HttpStatus.BAD_REQUEST);
+        }
     }
 }
