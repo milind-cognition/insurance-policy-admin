@@ -107,7 +107,7 @@ public class NewPolicyService {
         policy.setUwStatus("PN");
         policy.setRiskScore(0);
         policy.setWebIndicator("N");
-        policy.setApiFlag("N");
+        policy.setApiFlag("Y");
         policy.setUpdatedBy("POLNEW");
         return policy;
     }
