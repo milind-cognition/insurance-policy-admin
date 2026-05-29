@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=DB2
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-test.sql
+      data-locations: classpath:data-test.sql
+
+premium:
+  tax-rate: 0.0350
+  surcharge: 25.00
+  base-rates:
+    AUT: 850.00
+    HOM: 1200.00
+    COM: 5000.00
+    LIF: 400.00
+    HLT: 3500.00
+  default-base-rate: 1000.00
+  chunk-size: 10
+  thread-pool-size: 2
