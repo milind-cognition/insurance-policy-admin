@@ -66,16 +66,17 @@ public class PolicyControllerTests {
 
     @Test
     public void renewPolicy_happyPath() throws Exception {
-        // POL-00000001: AC status, premium 1250.00, expiry 2026-01-01, renewalCount 5
-        mockMvc.perform(post("/api/v1/policies/POL-00000001/renewal"))
+        // Uses POL-00000002 (not POL-00000001) to avoid mutating state used by read tests
+        // POL-00000002: AUT, AC status, premium 890.50, expiry 2026-03-15, renewalCount 2
+        mockMvc.perform(post("/api/v1/policies/POL-00000002/renewal"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.policyNumber", is("POL-00000001")))
-                .andExpect(jsonPath("$.previousPremium", is(1250.0)))
-                .andExpect(jsonPath("$.newPremium", is(1312.5)))
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000002")))
+                .andExpect(jsonPath("$.previousPremium", is(890.5)))
+                .andExpect(jsonPath("$.newPremium", is(935.03)))
                 .andExpect(jsonPath("$.rateChangePct", is(5.0)))
                 .andExpect(jsonPath("$.rateCapped", is(false)))
-                .andExpect(jsonPath("$.renewalCount", is(6)))
+                .andExpect(jsonPath("$.renewalCount", is(3)))
                 .andExpect(jsonPath("$.newEffectiveDate", notNullValue()))
                 .andExpect(jsonPath("$.newExpiryDate", notNullValue()));
     }
