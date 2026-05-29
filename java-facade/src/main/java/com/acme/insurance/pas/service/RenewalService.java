@@ -5,6 +5,7 @@ import com.acme.insurance.pas.model.RenewalResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -42,6 +43,7 @@ public class RenewalService {
      * @return RenewalResponse on success, null if policy not found
      * @throws IllegalArgumentException if policy is not eligible for renewal
      */
+    @Transactional
     public RenewalResponse renewPolicy(String policyNumber) {
         // 2000-READ-EXISTING-POLICY
         Policy policy = policyRepository.findByPolicyNumber(policyNumber);
@@ -52,8 +54,12 @@ public class RenewalService {
         // 3000-CHECK-RENEWAL-ELIGIBILITY
         checkRenewalEligibility(policy);
 
-        // 4000-CALCULATE-NEW-PREMIUM
         BigDecimal oldPremium = policy.getTotalPremium();
+        if (oldPremium == null || oldPremium.signum() == 0) {
+            throw new IllegalArgumentException("POLICY PREMIUM IS ZERO OR NULL");
+        }
+
+        // 4000-CALCULATE-NEW-PREMIUM
         BigDecimal newPremium = calculateNewPremium(oldPremium);
 
         // 5000-APPLY-RATE-CAP
