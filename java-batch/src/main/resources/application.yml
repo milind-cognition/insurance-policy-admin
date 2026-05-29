@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:db2://localhost:50000/ACMEINS
+    driver-class-name: com.ibm.db2.jcc.DB2Driver
+    username: ${DB2_USERNAME:PASBATCH}
+    password: ${DB2_PASSWORD:changeme}
+  batch:
+    job:
+      enabled: true
+    jdbc:
+      initialize-schema: always
+
+premium:
+  tax-rate: 0.0350
+  surcharge: 25.00
+  base-rates:
+    AUT: 850.00
+    HOM: 1200.00
+    COM: 5000.00
+    LIF: 400.00
+    HLT: 3500.00
+  default-base-rate: 1000.00
+  chunk-size: 100
+  thread-pool-size: 4

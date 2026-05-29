@@ -21,6 +21,13 @@ The Policy Administration System is the **core insurance platform** for Acme Ins
 - **Purpose:** Read-only REST API for modern system integration
 - **Deployment:** Docker container on Linux VM (not on z/OS)
 
+### Premium Batch Service (Added 2025)
+- **Language:** Java 21
+- **Framework:** Spring Boot 3.3 / Spring Batch 5
+- **Purpose:** Replaces COBOL `PREMBAT` program and `PREMIUM-BATCH.jcl` job
+- **Deployment:** Docker container (same infrastructure as REST facade)
+- **Source:** `java-batch/`
+
 ## CICS Transactions
 
 | Transaction | Program | Description |
@@ -64,6 +71,42 @@ GET /manage/health                              - Health check
 - **Actuarial Models:** Monthly exposure CSV via MONTHLY-EXPOSURE.jcl
 - **Broker Portal:** SQL Server linked server to DB2 (read-only ODBC)
 - **Document Management:** IBM MQ events trigger document creation in FileNet
+
+## Java Batch Module (`java-batch/`)
+
+Spring Batch replacement for the COBOL `PREMBAT` program. Calculates premiums for all active policies and writes results to the `PREMIUMS` table.
+
+### Key Improvements over COBOL
+1. **Externalized configuration** — base rates, tax rate, surcharge in `application.yml` instead of hardcoded
+2. **Multi-threaded processing** — configurable `TaskExecutor` parallelizes chunks (addresses the 4-hour runtime)
+3. **Chunk-based commits** — configurable chunk size (default 100) instead of row-by-row
+4. **Territory factor loading** — actually loads and applies factors from `TERRITORY_FACTORS` table (COBOL had this stubbed)
+5. **Modern date handling** — `java.time.LocalDate` instead of integer arithmetic
+
+### Build & Run
+
+```bash
+# Build (requires Java 21)
+cd java-batch
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 mvn package
+
+# Run against DB2
+java -jar target/pas-batch-1.0.0.jar \
+  --spring.datasource.url=jdbc:db2://host:50000/ACMEINS \
+  --spring.datasource.username=USER \
+  --spring.datasource.password=PASS
+
+# Run via Docker
+docker build -t pas-batch .
+docker run -e DB2_USERNAME=USER -e DB2_PASSWORD=PASS pas-batch
+```
+
+### Run Tests
+
+```bash
+cd java-batch
+JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 mvn test
+```
 
 ## Known Limitations
 
