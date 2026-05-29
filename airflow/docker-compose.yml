@@ -1,0 +1,100 @@
+##############################################################################
+# Local Airflow dev environment
+#
+# Services:
+#   - airflow-webserver  (UI on http://localhost:8080)
+#   - airflow-scheduler
+#   - postgres-airflow   (Airflow metadata DB)
+#   - postgres-pas       (simulates the PAS DB2 database)
+#
+# Usage:
+#   docker compose up --build -d
+#   docker compose exec airflow-webserver airflow users create \
+#       --username admin --password admin --firstname Admin \
+#       --lastname User --role Admin --email admin@acme.local
+#   Open http://localhost:8080
+##############################################################################
+
+x-airflow-common: &airflow-common
+  build: .
+  environment: &airflow-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    # PAS database connection (points at the local postgres-pas container)
+    AIRFLOW_CONN_PAS_DATABASE: postgresql+psycopg2://pas:pas@postgres-pas:5432/pas
+    PAS_REPORT_DIR: /data/reports
+    PAS_EXTRACT_DIR: /data/extracts
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./plugins:/opt/airflow/plugins
+    - ./sql:/opt/airflow/sql
+    - airflow-data:/data
+  depends_on:
+    postgres-airflow:
+      condition: service_healthy
+    postgres-pas:
+      condition: service_healthy
+
+services:
+  postgres-airflow:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      retries: 5
+
+  postgres-pas:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pas
+      POSTGRES_PASSWORD: pas
+      POSTGRES_DB: pas
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql/ddl:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pas"]
+      interval: 5s
+      retries: 5
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin --password admin \
+          --firstname Admin --lastname User \
+          --role Admin --email admin@acme.local || true
+    restart: "no"
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: airflow webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: airflow scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  airflow-data:
