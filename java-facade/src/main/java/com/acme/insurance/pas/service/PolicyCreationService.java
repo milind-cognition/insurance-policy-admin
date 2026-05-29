@@ -85,7 +85,10 @@ public class PolicyCreationService {
         if (request.getPolicyType() == null || request.getPolicyType().isBlank()) {
             throw new PolicyValidationException("Policy type is required");
         }
-        if (request.getEffectiveDate() != null && request.getEffectiveDate().isBefore(LocalDate.now())) {
+        if (request.getEffectiveDate() == null) {
+            throw new PolicyValidationException("Effective date is required");
+        }
+        if (request.getEffectiveDate().isBefore(LocalDate.now())) {
             throw new PolicyValidationException("Effective date cannot be in the past");
         }
         if (request.getCoverageLimit() == null || request.getCoverageLimit().compareTo(BigDecimal.ZERO) <= 0) {

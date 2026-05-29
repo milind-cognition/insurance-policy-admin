@@ -9,14 +9,14 @@ MERGE INTO ACMEINS.POLICY_HOLDERS (CUST_ID, CUST_TYPE, LAST_NAME, FIRST_NAME, MI
 KEY (CUST_ID)
 VALUES ('C000000001', 'I', 'Smith', 'John', 'A',
     '123 Main St', 'Springfield', 'IL', '62701', '217-555-0100',
-    'john.smith@example.com', '1975-06-15', 720, 'A');
+    'john.smith@example.com', '1975-06-15', 720, 'P');
 
 MERGE INTO ACMEINS.POLICY_HOLDERS (CUST_ID, CUST_TYPE, LAST_NAME, FIRST_NAME,
     ADDR_LINE1, CITY, STATE_CODE, ZIP_CODE, PHONE, EMAIL, DATE_OF_BIRTH, CREDIT_SCORE, RISK_TIER)
 KEY (CUST_ID)
 VALUES ('C000000002', 'I', 'Johnson', 'Mary',
     '456 Oak Ave', 'Chicago', 'IL', '60601', '312-555-0200',
-    'mary.johnson@example.com', '1982-03-22', 680, 'B');
+    'mary.johnson@example.com', '1982-03-22', 680, 'S');
 
 MERGE INTO ACMEINS.POLICY_HOLDERS (CUST_ID, CUST_TYPE, COMPANY_NAME,
     ADDR_LINE1, CITY, STATE_CODE, ZIP_CODE, PHONE, EMAIL, TAX_ID)
