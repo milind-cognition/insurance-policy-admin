@@ -2,12 +2,15 @@ package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.RenewalResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.RenewalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,8 +24,9 @@ import java.util.List;
  * go through CICS transactions on the mainframe.
  *
  * Endpoints:
- *   GET /api/v1/policies/{policyNumber}           - Policy details
- *   GET /api/v1/policies/{policyNumber}/coverages  - Coverage details
+ *   GET  /api/v1/policies/{policyNumber}           - Policy details
+ *   GET  /api/v1/policies/{policyNumber}/coverages  - Coverage details
+ *   POST /api/v1/policies/{policyNumber}/renewal    - Renew policy (POLRNW)
  *
  * NOTE: No authentication on these endpoints - relies on network
  * segmentation (internal VPN only). TODO: Add OAuth2 in Phase 2.
@@ -35,6 +39,9 @@ public class PolicyController {
 
     @Autowired
     private PolicyRepository policyRepository;
+
+    @Autowired
+    private RenewalService renewalService;
 
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {
@@ -56,5 +63,19 @@ public class PolicyController {
         List<Coverage> coverages = policyRepository.findCoveragesByPolicyNumber(
                 policyNumber);
         return new ResponseEntity<List<Coverage>>(coverages, HttpStatus.OK);
+    }
+
+    @PostMapping("/{policyNumber}/renewal")
+    public ResponseEntity<RenewalResponse> renewPolicy(
+            @PathVariable String policyNumber) {
+        try {
+            RenewalResponse response = renewalService.renewPolicy(policyNumber);
+            if (response == null) {
+                return new ResponseEntity<RenewalResponse>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<RenewalResponse>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<RenewalResponse>(HttpStatus.BAD_REQUEST);
+        }
     }
 }
