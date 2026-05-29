@@ -10,6 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
@@ -59,5 +60,38 @@ public class PolicyControllerTests {
         mockMvc.perform(get("/manage/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("UP")));
+    }
+
+    @Test
+    public void renewPolicy_success() throws Exception {
+        mockMvc.perform(put("/api/v1/policies/POL-00000002/renew"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000002")))
+                .andExpect(jsonPath("$.previousPremium", is(890.50)))
+                .andExpect(jsonPath("$.newPremium", is(935.03)))
+                .andExpect(jsonPath("$.rateChangePct", is(5.00)))
+                .andExpect(jsonPath("$.rateCapped", is(false)))
+                .andExpect(jsonPath("$.renewalCount", is(3)))
+                .andExpect(jsonPath("$.message", is("POLICY RENEWAL PROCESSED SUCCESSFULLY")));
+    }
+
+    @Test
+    public void renewPolicy_notFound() throws Exception {
+        mockMvc.perform(put("/api/v1/policies/NONEXISTENT/renew"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void renewPolicy_cancelledPolicy() throws Exception {
+        mockMvc.perform(put("/api/v1/policies/POL-00000004/renew"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("POLICY NOT ELIGIBLE FOR RENEWAL"));
+    }
+
+    @Test
+    public void renewPolicy_zeroPremium() throws Exception {
+        mockMvc.perform(put("/api/v1/policies/POL-00000005/renew"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("POLICY PREMIUM INVALID FOR RENEWAL"));
     }
 }

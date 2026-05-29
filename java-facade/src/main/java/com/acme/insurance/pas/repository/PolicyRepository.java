@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,6 +40,16 @@ public class PolicyRepository {
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
 
+    private static final String UPDATE_POLICY_RENEWAL_SQL =
+            "UPDATE ACMEINS.POLICIES SET POLICY_STATUS=?, EFFECTIVE_DATE=?, " +
+            "EXPIRY_DATE=?, TOTAL_PREMIUM=?, RENEWAL_COUNT=?, UW_STATUS=?, " +
+            "LAST_UPDATED=CURRENT_TIMESTAMP, UPDATED_BY=? " +
+            "WHERE POLICY_NUMBER=?";
+
+    private static final String UPDATE_COVERAGES_DATES_SQL =
+            "UPDATE ACMEINS.COVERAGES SET EFFECTIVE_DATE=?, EXPIRY_DATE=? " +
+            "WHERE POLICY_NUMBER=? AND STATUS='AC'";
+
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
             "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, " +
@@ -64,6 +75,25 @@ public class PolicyRepository {
                 FIND_COVERAGES_SQL,
                 new Object[]{policyNumber},
                 new CoverageRowMapper());
+    }
+
+    public int updatePolicyRenewal(Policy policy) {
+        return jdbcTemplate.update(UPDATE_POLICY_RENEWAL_SQL,
+                policy.getPolicyStatus(),
+                policy.getEffectiveDate(),
+                policy.getExpiryDate(),
+                policy.getTotalPremium(),
+                policy.getRenewalCount(),
+                policy.getUwStatus(),
+                policy.getUpdatedBy(),
+                policy.getPolicyNumber());
+    }
+
+    public int updateCoverageDates(String policyNumber, Date effectiveDate, Date expiryDate) {
+        return jdbcTemplate.update(UPDATE_COVERAGES_DATES_SQL,
+                effectiveDate,
+                expiryDate,
+                policyNumber);
     }
 
     private static class PolicyRowMapper implements RowMapper<Policy> {
