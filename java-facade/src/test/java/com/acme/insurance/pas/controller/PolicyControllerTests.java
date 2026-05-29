@@ -70,11 +70,11 @@ public class PolicyControllerTests {
                 "\"premiumAdjustment\":200.00," +
                 "\"description\":\"Add flood coverage\"}";
 
-        mockMvc.perform(post("/api/v1/policies/POL-00000002/endorsements")
+        mockMvc.perform(post("/api/v1/policies/POL-00000004/endorsements")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.policyNumber", is("POL-00000002")))
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000004")))
                 .andExpect(jsonPath("$.endorsementSeq", is(1)))
                 .andExpect(jsonPath("$.endorsementType", is("CAD")))
                 .andExpect(jsonPath("$.prorataFactor").isNumber())
@@ -98,6 +98,18 @@ public class PolicyControllerTests {
     public void postEndorsement_missingType() throws Exception {
         String body = "{\"premiumAdjustment\":100.00," +
                 "\"description\":\"Missing type\"}";
+
+        mockMvc.perform(post("/api/v1/policies/POL-00000004/endorsements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void postEndorsement_expiredPolicy() throws Exception {
+        String body = "{\"endorsementType\":\"CAD\"," +
+                "\"premiumAdjustment\":100.00," +
+                "\"description\":\"Should fail - expired\"}";
 
         mockMvc.perform(post("/api/v1/policies/POL-00000001/endorsements")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -95,6 +95,9 @@ public class EndorsementService {
                 || request.getEndorsementType().trim().isEmpty()) {
             throw new IllegalArgumentException("ENDORSEMENT TYPE IS REQUIRED");
         }
+        if (request.getPremiumAdjustment() == null) {
+            throw new IllegalArgumentException("PREMIUM ADJUSTMENT IS REQUIRED");
+        }
     }
 
     /**
@@ -107,8 +110,12 @@ public class EndorsementService {
         long daysInTerm = ChronoUnit.DAYS.between(effectiveDate, expiryDate);
         long daysRemaining = ChronoUnit.DAYS.between(currentDate, expiryDate);
 
-        if (daysInTerm == 0) {
+        if (daysInTerm <= 0) {
             return BigDecimal.ONE;
+        }
+
+        if (daysRemaining <= 0) {
+            throw new IllegalArgumentException("POLICY TERM HAS EXPIRED - ENDORSEMENT NOT ALLOWED");
         }
 
         return BigDecimal.valueOf(daysRemaining)
