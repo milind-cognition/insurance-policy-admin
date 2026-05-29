@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -41,6 +42,7 @@ public class NewPolicyService {
      * @return the created Policy
      * @throws IllegalArgumentException if validation fails
      */
+    @Transactional
     public Policy createPolicy(NewPolicyRequest request) {
         // 1000-INITIALIZE (clear state - implicit in stateless REST)
 
@@ -78,9 +80,8 @@ public class NewPolicyService {
         }
         if (request.getEffectiveDate() != null
                 && request.getEffectiveDate().before(new Date())) {
-            // COBOL: IF POLICY-EFFECTIVE-DATE < WS-CURRENT-DATE
-            // Relaxed: only reject if effective date is strictly before today
-            // (COBOL compares YYYYMMDD, so same-day is OK)
+            throw new IllegalArgumentException(
+                    "EFFECTIVE DATE CANNOT BE IN PAST");
         }
         if (request.getCoverageLimit() == null
                 || request.getCoverageLimit().compareTo(BigDecimal.ZERO) <= 0) {
