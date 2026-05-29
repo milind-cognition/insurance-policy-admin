@@ -1,12 +1,14 @@
 package com.acme.insurance.pas.repository;
 
 import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.model.Endorsement;
 import com.acme.insurance.pas.model.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -48,6 +50,22 @@ public class PolicyRepository {
             "WHERE POLICY_NUMBER = ? " +
             "ORDER BY SEQUENCE_NUM";
 
+    private static final String NEXT_ENDORSEMENT_SEQ_SQL =
+            "SELECT COALESCE(MAX(ENDORSEMENT_SEQ), 0) + 1 " +
+            "FROM ACMEINS.ENDORSEMENTS WHERE POLICY_NUMBER = ?";
+
+    private static final String INSERT_ENDORSEMENT_SQL =
+            "INSERT INTO ACMEINS.ENDORSEMENTS " +
+            "(POLICY_NUMBER, ENDORSEMENT_SEQ, ENDORSEMENT_TYPE, " +
+            "EFFECTIVE_DATE, DESCRIPTION, PREMIUM_ADJUSTMENT, " +
+            "PROCESSED_DATE, PROCESSED_BY) " +
+            "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)";
+
+    private static final String UPDATE_POLICY_PREMIUM_SQL =
+            "UPDATE ACMEINS.POLICIES SET TOTAL_PREMIUM = ?, " +
+            "LAST_UPDATED = CURRENT_TIMESTAMP, UPDATED_BY = ? " +
+            "WHERE POLICY_NUMBER = ?";
+
     public Policy findByPolicyNumber(String policyNumber) {
         List<Policy> results = jdbcTemplate.query(
                 FIND_POLICY_SQL,
@@ -64,6 +82,30 @@ public class PolicyRepository {
                 FIND_COVERAGES_SQL,
                 new Object[]{policyNumber},
                 new CoverageRowMapper());
+    }
+
+    public int getNextEndorsementSeq(String policyNumber) {
+        return jdbcTemplate.queryForObject(
+                NEXT_ENDORSEMENT_SEQ_SQL,
+                new Object[]{policyNumber},
+                Integer.class);
+    }
+
+    public void insertEndorsement(Endorsement endorsement) {
+        jdbcTemplate.update(INSERT_ENDORSEMENT_SQL,
+                endorsement.getPolicyNumber(),
+                endorsement.getEndorsementSeq(),
+                endorsement.getEndorsementType(),
+                endorsement.getEffectiveDate(),
+                endorsement.getDescription(),
+                endorsement.getPremiumAdjustment(),
+                endorsement.getProcessedBy());
+    }
+
+    public void updatePolicyPremium(String policyNumber,
+            BigDecimal newPremium, String updatedBy) {
+        jdbcTemplate.update(UPDATE_POLICY_PREMIUM_SQL,
+                newPremium, updatedBy, policyNumber);
     }
 
     private static class PolicyRowMapper implements RowMapper<Policy> {
