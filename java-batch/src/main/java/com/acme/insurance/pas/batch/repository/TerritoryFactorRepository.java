@@ -23,7 +23,7 @@ public class TerritoryFactorRepository {
                 + "FROM TERRITORY_FACTORS "
                 + "WHERE TERRITORY_CODE = ? AND EFFECTIVE_DATE <= ? "
                 + "ORDER BY EFFECTIVE_DATE DESC "
-                + "LIMIT 1";
+                + "FETCH FIRST 1 ROW ONLY";
 
         List<TerritoryFactor> results = jdbcTemplate.query(sql,
                 (rs, rowNum) -> {

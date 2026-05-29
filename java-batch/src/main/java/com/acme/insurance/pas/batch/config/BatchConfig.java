@@ -17,6 +17,8 @@ import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.support.SynchronizedItemStreamReader;
+import org.springframework.batch.item.support.builder.SynchronizedItemStreamReaderBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +28,6 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import java.sql.Date;
 
 @Configuration
 public class BatchConfig {
@@ -56,6 +57,14 @@ public class BatchConfig {
                 .dataSource(policyRepository.getDataSource())
                 .sql(PolicyRepository.ACTIVE_POLICIES_SQL)
                 .rowMapper(new PolicyRepository.PolicyRowMapper())
+                .build();
+    }
+
+    @Bean
+    public SynchronizedItemStreamReader<Policy> synchronizedPolicyReader(
+            JdbcCursorItemReader<Policy> policyReader) {
+        return new SynchronizedItemStreamReaderBuilder<Policy>()
+                .delegate(policyReader)
                 .build();
     }
 
@@ -93,12 +102,12 @@ public class BatchConfig {
     @Bean
     public Step premiumCalculationStep(JobRepository jobRepository,
                                        PlatformTransactionManager transactionManager,
-                                       JdbcCursorItemReader<Policy> policyReader,
+                                       SynchronizedItemStreamReader<Policy> synchronizedPolicyReader,
                                        JdbcBatchItemWriter<PremiumRecord> premiumWriter,
                                        TaskExecutor batchTaskExecutor) {
         return new StepBuilder("premiumCalculationStep", jobRepository)
                 .<Policy, PremiumRecord>chunk(chunkSize, transactionManager)
-                .reader(policyReader)
+                .reader(synchronizedPolicyReader)
                 .processor(calculationService::calculate)
                 .writer(premiumWriter)
                 .taskExecutor(batchTaskExecutor)

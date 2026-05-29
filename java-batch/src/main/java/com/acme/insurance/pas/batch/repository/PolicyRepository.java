@@ -23,12 +23,15 @@ public class PolicyRepository {
     }
 
     public static final String ACTIVE_POLICIES_SQL =
-            "SELECT POLICY_NUMBER, POLICY_TYPE, POLICY_STATUS, "
-                    + "EFFECTIVE_DATE, EXPIRY_DATE, "
-                    + "TOTAL_PREMIUM, DEDUCTIBLE, COVERAGE_LIMIT "
-                    + "FROM POLICIES "
-                    + "WHERE POLICY_STATUS = 'AC' "
-                    + "ORDER BY POLICY_NUMBER";
+            "SELECT P.POLICY_NUMBER, P.POLICY_TYPE, P.POLICY_STATUS, "
+                    + "P.EFFECTIVE_DATE, P.EXPIRY_DATE, "
+                    + "P.TOTAL_PREMIUM, P.DEDUCTIBLE, P.COVERAGE_LIMIT, "
+                    + "C.RATING_TERRITORY "
+                    + "FROM POLICIES P "
+                    + "LEFT JOIN COVERAGES C "
+                    + "ON P.POLICY_NUMBER = C.POLICY_NUMBER AND C.SEQUENCE_NUM = 1 "
+                    + "WHERE P.POLICY_STATUS = 'AC' "
+                    + "ORDER BY P.POLICY_NUMBER";
 
     public static class PolicyRowMapper implements RowMapper<Policy> {
         @Override
@@ -42,6 +45,10 @@ public class PolicyRepository {
             policy.setTotalPremium(rs.getBigDecimal("TOTAL_PREMIUM"));
             policy.setDeductible(rs.getBigDecimal("DEDUCTIBLE"));
             policy.setCoverageLimit(rs.getBigDecimal("COVERAGE_LIMIT"));
+            String territory = rs.getString("RATING_TERRITORY");
+            if (territory != null) {
+                policy.setTerritoryCode(territory.trim());
+            }
             return policy;
         }
     }
