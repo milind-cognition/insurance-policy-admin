@@ -2,7 +2,9 @@ package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.PolicyInquiryResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.PolicyInquiryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +38,9 @@ public class PolicyController {
     @Autowired
     private PolicyRepository policyRepository;
 
+    @Autowired
+    private PolicyInquiryService policyInquiryService;
+
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {
         Policy policy = policyRepository.findByPolicyNumber(policyNumber);
@@ -43,6 +48,20 @@ public class PolicyController {
             return new ResponseEntity<Policy>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<Policy>(policy, HttpStatus.OK);
+    }
+
+    @GetMapping("/{policyNumber}/inquiry")
+    public ResponseEntity<PolicyInquiryResponse> inquirePolicy(
+            @PathVariable String policyNumber) {
+        try {
+            PolicyInquiryResponse response = policyInquiryService.inquire(policyNumber);
+            if (response == null) {
+                return new ResponseEntity<PolicyInquiryResponse>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<PolicyInquiryResponse>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<PolicyInquiryResponse>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     @GetMapping("/{policyNumber}/coverages")
