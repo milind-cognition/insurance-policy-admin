@@ -2,12 +2,15 @@ package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.PremiumBatchResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.PremiumBatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,6 +39,9 @@ public class PolicyController {
     @Autowired
     private PolicyRepository policyRepository;
 
+    @Autowired
+    private PremiumBatchService premiumBatchService;
+
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {
         Policy policy = policyRepository.findByPolicyNumber(policyNumber);
@@ -43,6 +49,12 @@ public class PolicyController {
             return new ResponseEntity<Policy>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<Policy>(policy, HttpStatus.OK);
+    }
+
+    @PostMapping("/premium-batch")
+    public ResponseEntity<PremiumBatchResponse> runPremiumBatch() {
+        PremiumBatchResponse response = premiumBatchService.calculatePremiums();
+        return new ResponseEntity<PremiumBatchResponse>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{policyNumber}/coverages")

@@ -8,8 +8,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
@@ -59,5 +61,36 @@ public class PolicyControllerTests {
         mockMvc.perform(get("/manage/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("UP")));
+    }
+
+    @Test
+    @Transactional
+    public void premiumBatch_success() throws Exception {
+        mockMvc.perform(post("/api/v1/policies/premium-batch"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.policiesRead", is(3)))
+                .andExpect(jsonPath("$.policiesUpdated", is(3)))
+                .andExpect(jsonPath("$.policiesError", is(0)))
+                .andExpect(jsonPath("$.message", is("PREMBAT completed successfully")));
+    }
+
+    @Test
+    @Transactional
+    public void premiumBatch_calculatesCorrectly() throws Exception {
+        // Run the batch first
+        mockMvc.perform(post("/api/v1/policies/premium-batch"))
+                .andExpect(status().isOk());
+
+        // Verify batch response has correct base rates:
+        // POL-00000001 (HOM) -> base 1200, tax 42.00, surcharge 25 -> total 1267.00
+        // POL-00000002 (AUT) -> base 850, tax 29.75, surcharge 25 -> total 904.75
+        // POL-00000003 (CGL) -> base 5000, tax 175.00, surcharge 25 -> total 5200.00
+        // Run a second time — should fail with errors due to duplicate PK
+        mockMvc.perform(post("/api/v1/policies/premium-batch"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.policiesRead", is(3)))
+                .andExpect(jsonPath("$.policiesUpdated", is(0)))
+                .andExpect(jsonPath("$.policiesError", is(3)));
     }
 }
