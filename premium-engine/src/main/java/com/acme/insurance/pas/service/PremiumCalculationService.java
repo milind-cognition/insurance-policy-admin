@@ -13,7 +13,10 @@ import com.acme.insurance.pas.repository.TerritoryFactorRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -62,15 +65,19 @@ public class PremiumCalculationService {
     private final CoverageRepository coverageRepository;
     private final PremiumRepository premiumRepository;
     private final TerritoryFactorRepository territoryFactorRepository;
+    private final TransactionTemplate txTemplate;
 
     public PremiumCalculationService(PolicyRepository policyRepository,
                                      CoverageRepository coverageRepository,
                                      PremiumRepository premiumRepository,
-                                     TerritoryFactorRepository territoryFactorRepository) {
+                                     TerritoryFactorRepository territoryFactorRepository,
+                                     PlatformTransactionManager txManager) {
         this.policyRepository = policyRepository;
         this.coverageRepository = coverageRepository;
         this.premiumRepository = premiumRepository;
         this.territoryFactorRepository = territoryFactorRepository;
+        this.txTemplate = new TransactionTemplate(txManager);
+        this.txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
     /**
@@ -213,7 +220,6 @@ public class PremiumCalculationService {
         premiumRepository.save(premium);
     }
 
-    @Transactional
     public BatchSummary runBatch() {
         List<Policy> activePolicies =
                 policyRepository.findByPolicyStatusOrderByPolicyNumber("AC");
@@ -226,7 +232,9 @@ public class PremiumCalculationService {
             policiesRead++;
             try {
                 PremiumResult result = calculatePremium(policy);
-                persistPremiumResult(policy, result);
+                txTemplate.executeWithoutResult(status -> {
+                    persistPremiumResult(policy, result);
+                });
                 policiesUpdated++;
                 log.info("{} PREMIUM: {}", policy.getPolicyNumber(), result.finalPremium());
             } catch (Exception e) {
