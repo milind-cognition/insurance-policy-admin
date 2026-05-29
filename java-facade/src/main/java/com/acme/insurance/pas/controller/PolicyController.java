@@ -7,7 +7,7 @@ import com.acme.insurance.pas.model.Policy;
 import com.acme.insurance.pas.repository.PolicyRepository;
 import com.acme.insurance.pas.service.EndorsementService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -80,7 +80,7 @@ public class PolicyController {
             return new ResponseEntity<EndorsementResponse>(response, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<EndorsementResponse>(HttpStatus.BAD_REQUEST);
-        } catch (DataAccessException e) {
+        } catch (DataIntegrityViolationException e) {
             return new ResponseEntity<EndorsementResponse>(HttpStatus.CONFLICT);
         }
     }
