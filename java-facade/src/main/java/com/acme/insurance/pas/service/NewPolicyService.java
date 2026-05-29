@@ -90,9 +90,9 @@ public class NewPolicyService {
         policy.setPolicyNumber(policyNumber);
         policy.setPolicyType(request.getPolicyType());
         policy.setPolicyStatus("PN");
-        policy.setEffectiveDate(request.getEffectiveDate() != null ?
+        policy.setEffectiveDate(isPresent(request.getEffectiveDate()) ?
                 parseDate(request.getEffectiveDate()) : new Date());
-        policy.setExpiryDate(request.getExpiryDate() != null ?
+        policy.setExpiryDate(isPresent(request.getExpiryDate()) ?
                 parseDate(request.getExpiryDate()) : addOneYear(policy.getEffectiveDate()));
         policy.setPolicyholderId(request.getPolicyholderId());
         policy.setAgentCode(request.getAgentCode());
@@ -114,9 +114,9 @@ public class NewPolicyService {
 
     private int insertDefaultCoverages(String policyNumber, NewPolicyRequest request) {
         String policyType = request.getPolicyType().toUpperCase();
-        Date effDate = request.getEffectiveDate() != null ?
+        Date effDate = isPresent(request.getEffectiveDate()) ?
                 parseDate(request.getEffectiveDate()) : new Date();
-        Date expDate = request.getExpiryDate() != null ?
+        Date expDate = isPresent(request.getExpiryDate()) ?
                 parseDate(request.getExpiryDate()) : addOneYear(effDate);
 
         int count = 0;
@@ -151,6 +151,10 @@ public class NewPolicyService {
         coverage.setExpiryDate(expDate);
         coverage.setStatus("AC");
         policyRepository.insertCoverage(coverage);
+    }
+
+    private boolean isPresent(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     private Date parseDate(String dateStr) {
