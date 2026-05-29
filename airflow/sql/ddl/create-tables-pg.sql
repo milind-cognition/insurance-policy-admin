@@ -12,6 +12,9 @@ CREATE SCHEMA IF NOT EXISTS acmeins;
 
 SET search_path TO acmeins, public;
 
+-- Make the search_path permanent for all future connections to this database
+ALTER DATABASE pas SET search_path TO acmeins, public;
+
 ------------------------------------------------------------------------
 -- POLICIES - Policy master table
 ------------------------------------------------------------------------
