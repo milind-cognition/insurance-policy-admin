@@ -15,6 +15,7 @@ import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,12 +24,12 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
-import java.sql.Date;
 
 /**
  * Spring Batch configuration defining the premium calculation job.
  *
- * Reader  – JdbcCursorItemReader selecting active policies (COBOL 3000-PROCESS-POLICIES).
+ * Reader  – JdbcCursorItemReader (wrapped in SynchronizedItemStreamReader for thread safety)
+ *           selecting active policies (COBOL 3000-PROCESS-POLICIES).
  * Processor – PremiumCalculationService.calculate() (COBOL 3200-CALCULATE-PREMIUM).
  * Writer  – JdbcBatchItemWriter inserting into PREMIUMS (COBOL 3300-WRITE-PREMIUM-RECORD).
  *
@@ -45,14 +46,22 @@ public class BatchConfig {
     private int threadPoolSize;
 
     @Bean
-    public JdbcCursorItemReader<Policy> policyReader(DataSource dataSource,
-                                                      PolicyRepository policyRepository) {
+    public JdbcCursorItemReader<Policy> policyCursorReader(DataSource dataSource,
+                                                            PolicyRepository policyRepository) {
         return new JdbcCursorItemReaderBuilder<Policy>()
                 .name("policyReader")
                 .dataSource(dataSource)
                 .sql(PolicyRepository.SELECT_ACTIVE_POLICIES)
                 .rowMapper(policyRepository.rowMapper())
                 .build();
+    }
+
+    @Bean
+    public SynchronizedItemStreamReader<Policy> policyReader(
+            JdbcCursorItemReader<Policy> policyCursorReader) {
+        SynchronizedItemStreamReader<Policy> reader = new SynchronizedItemStreamReader<>();
+        reader.setDelegate(policyCursorReader);
+        return reader;
     }
 
     @Bean
@@ -79,7 +88,7 @@ public class BatchConfig {
     @Bean
     public Step premiumCalculationStep(JobRepository jobRepository,
                                        PlatformTransactionManager transactionManager,
-                                       JdbcCursorItemReader<Policy> policyReader,
+                                       SynchronizedItemStreamReader<Policy> policyReader,
                                        PremiumCalculationService calculationService,
                                        PremiumReportWriter premiumReportWriter,
                                        TaskExecutor batchTaskExecutor) {
