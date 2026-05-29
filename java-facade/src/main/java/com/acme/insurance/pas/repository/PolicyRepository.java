@@ -3,6 +3,8 @@ package com.acme.insurance.pas.repository;
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
 import com.acme.insurance.pas.model.UnderwritingDecision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.List;
 
 /**
@@ -28,6 +31,8 @@ import java.util.List;
  */
 @Repository
 public class PolicyRepository {
+
+    private static final Logger log = LoggerFactory.getLogger(PolicyRepository.class);
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -63,7 +68,7 @@ public class PolicyRepository {
             "SELECT COUNT(*), COALESCE(SUM(INCURRED_AMOUNT), 0) " +
             "FROM ACMEINS.CLAIMS " +
             "WHERE POLICY_NUMBER = ? " +
-            "AND CLAIM_DATE >= DATEADD('YEAR', -5, CURRENT_DATE)";
+            "AND CLAIM_DATE >= ?";
 
     private static final String SUM_BRANCH_COVERAGE_SQL =
             "SELECT COALESCE(SUM(COVERAGE_LIMIT), 0) " +
@@ -111,19 +116,24 @@ public class PolicyRepository {
         return results.get(0);
     }
 
-    public int[] getClaimStats(String policyNumber) {
+    public long[] getClaimStats(String policyNumber) {
         try {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.YEAR, -5);
+            java.sql.Date fiveYearsAgo = new java.sql.Date(cal.getTimeInMillis());
             return jdbcTemplate.queryForObject(
                     COUNT_CLAIMS_SQL,
-                    new Object[]{policyNumber},
-                    new RowMapper<int[]>() {
+                    new Object[]{policyNumber, fiveYearsAgo},
+                    new RowMapper<long[]>() {
                         @Override
-                        public int[] mapRow(ResultSet rs, int rowNum) throws SQLException {
-                            return new int[]{rs.getInt(1), rs.getBigDecimal(2).intValue()};
+                        public long[] mapRow(ResultSet rs, int rowNum) throws SQLException {
+                            return new long[]{rs.getLong(1), rs.getBigDecimal(2).longValue()};
                         }
                     });
         } catch (DataAccessException e) {
-            return new int[]{0, 0};
+            log.warn("Claims query failed for policy {}, treating as 0 claims: {}",
+                    policyNumber, e.getMessage());
+            return new long[]{0, 0};
         }
     }
 

@@ -61,9 +61,9 @@ public class UnderwritingService {
             riskScore -= 100;
         }
 
-        int[] claimStats = policyRepository.getClaimStats(policyNumber);
-        int claimCount = claimStats[0];
-        int totalIncurred = claimStats[1];
+        long[] claimStats = policyRepository.getClaimStats(policyNumber);
+        long claimCount = claimStats[0];
+        long totalIncurred = claimStats[1];
 
         if (claimCount > 3) {
             riskScore += 150;
@@ -74,10 +74,10 @@ public class UnderwritingService {
 
         BigDecimal premium = data.getTotalPremium();
         if (premium != null && premium.compareTo(BigDecimal.ZERO) > 0) {
-            int lossRatio = new BigDecimal(totalIncurred)
+            long lossRatio = BigDecimal.valueOf(totalIncurred)
                     .multiply(new BigDecimal(100))
                     .divide(premium, 0, BigDecimal.ROUND_DOWN)
-                    .intValue();
+                    .longValue();
             if (lossRatio > 80) {
                 riskScore += 200;
             }
