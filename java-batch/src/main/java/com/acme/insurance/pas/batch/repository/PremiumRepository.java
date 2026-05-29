@@ -9,9 +9,32 @@ import org.springframework.stereotype.Repository;
  * Writes premium calculation results to the PREMIUMS table.
  * Mirrors the INSERT in COBOL paragraph 3300-WRITE-PREMIUM-RECORD
  * (PREMBAT.cbl lines 202-218).
+ *
+ * <p>Uses an upsert pattern (UPDATE then INSERT) so the batch job
+ * is idempotent — re-running with RunIdIncrementer will not fail
+ * with duplicate key violations.
  */
 @Repository
 public class PremiumRepository {
+
+    static final String UPDATE_PREMIUM =
+            "UPDATE PREMIUMS SET "
+                    + "TERM_EXPIRY_DATE = :termExpDate, "
+                    + "BASE_RATE = :baseRate, "
+                    + "TERRITORY_FACTOR = :territoryFactor, "
+                    + "CLASS_FACTOR = :classFactor, "
+                    + "EXPERIENCE_MOD = :experienceMod, "
+                    + "SCHEDULE_MOD = :scheduleMod, "
+                    + "DISCOUNT_PCT = :discountPct, "
+                    + "SURCHARGE_AMT = :surchargeAmt, "
+                    + "TAX_AMT = :taxAmt, "
+                    + "TOTAL_PREMIUM = :totalPremium, "
+                    + "INSTALLMENT_CODE = :installmentCode, "
+                    + "CALC_DATE = :calcDate, "
+                    + "CALC_BY = :calcBy "
+                    + "WHERE POLICY_NUMBER = :policyNumber "
+                    + "AND COVERAGE_SEQ = :coverageSeq "
+                    + "AND TERM_EFFECTIVE_DATE = :termEffDate";
 
     static final String INSERT_PREMIUM =
             "INSERT INTO PREMIUMS "
@@ -30,9 +53,12 @@ public class PremiumRepository {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public void insert(PremiumRecord record) {
+    public void upsert(PremiumRecord record) {
         MapSqlParameterSource params = toParameterSource(record);
-        jdbcTemplate.update(INSERT_PREMIUM, params);
+        int updated = jdbcTemplate.update(UPDATE_PREMIUM, params);
+        if (updated == 0) {
+            jdbcTemplate.update(INSERT_PREMIUM, params);
+        }
     }
 
     public static MapSqlParameterSource toParameterSource(PremiumRecord r) {

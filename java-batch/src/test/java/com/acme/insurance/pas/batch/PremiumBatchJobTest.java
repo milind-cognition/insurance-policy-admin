@@ -58,7 +58,7 @@ class PremiumBatchJobTest {
         jobLauncherTestUtils.setJob(premiumBatchJob);
         jobLauncherTestUtils.launchJob();
 
-        // AUTO policy: base 850 * territory 1.15 (POL-AU matches test data) = 977.50
+        // AUTO policy: base 850 * territory 1.15 (NE0001 from COVERAGES) = 977.50
         // tax = 977.50 * 0.035 = 34.21, total = 977.50 + 34.21 + 25 = 1036.71
         BigDecimal autoPremium = jdbcTemplate.queryForObject(
                 "SELECT TOTAL_PREMIUM FROM PREMIUMS WHERE POLICY_NUMBER = 'POL-AUT-0001'",

@@ -43,9 +43,11 @@ public class PremiumCalculationService {
         BigDecimal baseRate = baseRates.getOrDefault(
                 policy.getPolicyType(), defaultBaseRate);
 
-        // Territory factor — loaded from TERRITORY_FACTORS table (COBOL had 1.0 hardcoded)
-        Optional<TerritoryFactor> terrFactorOpt = territoryFactorRepository
-                .findByCodeAndDate(policy.getPolicyNumber().substring(0, 6), LocalDate.now());
+        // Territory factor — loaded from TERRITORY_FACTORS table using COVERAGES.RATING_TERRITORY
+        String territoryCode = policy.getRatingTerritory();
+        Optional<TerritoryFactor> terrFactorOpt = territoryCode != null && !territoryCode.isBlank()
+                ? territoryFactorRepository.findByCodeAndDate(territoryCode, LocalDate.now())
+                : Optional.empty();
         BigDecimal terrFactor = terrFactorOpt
                 .map(TerritoryFactor::getRatingFactor)
                 .orElse(BigDecimal.ONE);

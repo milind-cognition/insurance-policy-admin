@@ -17,6 +17,7 @@ public class Policy {
     private BigDecimal totalPremium;
     private BigDecimal deductible;
     private BigDecimal coverageLimit;
+    private String ratingTerritory;    // from COVERAGES.RATING_TERRITORY
 
     public Policy() {
     }
@@ -83,5 +84,13 @@ public class Policy {
 
     public void setCoverageLimit(BigDecimal coverageLimit) {
         this.coverageLimit = coverageLimit;
+    }
+
+    public String getRatingTerritory() {
+        return ratingTerritory;
+    }
+
+    public void setRatingTerritory(String ratingTerritory) {
+        this.ratingTerritory = ratingTerritory;
     }
 }

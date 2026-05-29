@@ -83,7 +83,7 @@ public class BatchConfig {
             PremiumReportWriter reportWriter) {
         return chunk -> {
             for (PremiumRecord record : chunk.getItems()) {
-                premiumRepository.insert(record);
+                premiumRepository.upsert(record);
                 reportWriter.recordWritten(record);
             }
         };

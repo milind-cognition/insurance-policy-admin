@@ -134,12 +134,13 @@ class PremiumCalculationServiceTest {
     @Test
     void testTerritoryFactorApplied() {
         TerritoryFactor tf = new TerritoryFactor();
-        tf.setTerritoryCode("POL-HO");
+        tf.setTerritoryCode("NE0001");
         tf.setRatingFactor(new BigDecimal("1.1500"));
         when(territoryFactorRepository.findByCodeAndDate(anyString(), any(LocalDate.class)))
                 .thenReturn(Optional.of(tf));
 
         Policy policy = makePolicy("POL-HO-00001", "HOM");
+        policy.setRatingTerritory("NE0001");
         PremiumRecord result = service.calculate(policy);
 
         BigDecimal expectedBase = new BigDecimal("1200.00");

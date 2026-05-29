@@ -17,11 +17,14 @@ import java.sql.SQLException;
 public class PolicyRepository {
 
     public static final String SELECT_ACTIVE_POLICIES =
-            "SELECT POLICY_NUMBER, POLICY_TYPE, TOTAL_PREMIUM, DEDUCTIBLE, "
-                    + "COVERAGE_LIMIT, EFFECTIVE_DATE, EXPIRY_DATE "
-                    + "FROM POLICIES "
-                    + "WHERE POLICY_STATUS = 'AC' "
-                    + "ORDER BY POLICY_NUMBER";
+            "SELECT p.POLICY_NUMBER, p.POLICY_TYPE, p.TOTAL_PREMIUM, p.DEDUCTIBLE, "
+                    + "p.COVERAGE_LIMIT, p.EFFECTIVE_DATE, p.EXPIRY_DATE, "
+                    + "c.RATING_TERRITORY "
+                    + "FROM POLICIES p "
+                    + "LEFT JOIN COVERAGES c ON p.POLICY_NUMBER = c.POLICY_NUMBER "
+                    + "AND c.SEQUENCE_NUM = 1 "
+                    + "WHERE p.POLICY_STATUS = 'AC' "
+                    + "ORDER BY p.POLICY_NUMBER";
 
     private final DataSource dataSource;
 
@@ -44,6 +47,8 @@ public class PolicyRepository {
             policy.setCoverageLimit(rs.getBigDecimal("COVERAGE_LIMIT"));
             policy.setEffectiveDate(rs.getDate("EFFECTIVE_DATE").toLocalDate());
             policy.setExpiryDate(rs.getDate("EXPIRY_DATE").toLocalDate());
+            String territory = rs.getString("RATING_TERRITORY");
+            policy.setRatingTerritory(territory != null ? territory.trim() : null);
             return policy;
         }
     }
