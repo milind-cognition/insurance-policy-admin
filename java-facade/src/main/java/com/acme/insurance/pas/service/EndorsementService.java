@@ -141,8 +141,7 @@ public class EndorsementService {
 
         policyRepository.insertEndorsement(endorsement);
 
-        BigDecimal newTotalPremium = policy.getTotalPremium().add(adjustedPremium);
-        policyRepository.updatePolicyPremium(request.getPolicyNumber(), newTotalPremium);
+        policyRepository.updatePolicyPremium(request.getPolicyNumber(), adjustedPremium);
 
         return endorsementSeq;
     }

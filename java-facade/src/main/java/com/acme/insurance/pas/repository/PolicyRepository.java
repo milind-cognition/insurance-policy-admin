@@ -138,7 +138,7 @@ public class PolicyRepository {
 
     private static final String UPDATE_POLICY_PREMIUM_SQL =
             "UPDATE ACMEINS.POLICIES " +
-            "SET TOTAL_PREMIUM = ?, LAST_UPDATED = ?, UPDATED_BY = 'POLEND' " +
+            "SET TOTAL_PREMIUM = TOTAL_PREMIUM + ?, LAST_UPDATED = ?, UPDATED_BY = 'POLEND' " +
             "WHERE POLICY_NUMBER = ?";
 
     public int getNextEndorsementSeq(String policyNumber) {
@@ -160,9 +160,9 @@ public class PolicyRepository {
                 endorsement.getProcessedBy());
     }
 
-    public void updatePolicyPremium(String policyNumber, BigDecimal newPremium) {
+    public void updatePolicyPremium(String policyNumber, BigDecimal premiumAdjustment) {
         jdbcTemplate.update(UPDATE_POLICY_PREMIUM_SQL,
-                newPremium,
+                premiumAdjustment,
                 new Timestamp(System.currentTimeMillis()),
                 policyNumber);
     }
