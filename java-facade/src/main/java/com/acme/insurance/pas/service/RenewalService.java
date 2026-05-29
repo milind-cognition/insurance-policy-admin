@@ -65,7 +65,7 @@ public class RenewalService {
         // 5000-APPLY-RATE-CAP
         BigDecimal rateChangePct = newPremium.subtract(oldPremium)
                 .multiply(ONE_HUNDRED)
-                .divide(oldPremium, 2, RoundingMode.HALF_UP);
+                .divide(oldPremium, 2, RoundingMode.DOWN);
         boolean rateCapped = false;
         if (rateChangePct.compareTo(RATE_INCREASE_CAP) > 0) {
             newPremium = applyRateCap(oldPremium);
@@ -118,15 +118,15 @@ public class RenewalService {
      * 4000-CALCULATE-NEW-PREMIUM: flat 5% rate increase.
      */
     private BigDecimal calculateNewPremium(BigDecimal oldPremium) {
-        return oldPremium.multiply(RATE_INCREASE_FACTOR).setScale(2, RoundingMode.HALF_UP);
+        return oldPremium.multiply(RATE_INCREASE_FACTOR).setScale(2, RoundingMode.DOWN);
     }
 
     /**
      * 5000-APPLY-RATE-CAP: cap at 15% maximum increase.
      */
     private BigDecimal applyRateCap(BigDecimal oldPremium) {
-        return oldPremium.multiply(BigDecimal.ONE.add(RATE_INCREASE_CAP.divide(ONE_HUNDRED, 4, RoundingMode.HALF_UP)))
-                .setScale(2, RoundingMode.HALF_UP);
+        return oldPremium.multiply(BigDecimal.ONE.add(RATE_INCREASE_CAP.divide(ONE_HUNDRED, 4, RoundingMode.DOWN)))
+                .setScale(2, RoundingMode.DOWN);
     }
 
     /**
