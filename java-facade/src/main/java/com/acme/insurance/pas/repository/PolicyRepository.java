@@ -41,10 +41,9 @@ public class PolicyRepository {
             "WHERE POLICY_NUMBER = ?";
 
     private static final String FIND_CUSTOMER_SQL =
-            "SELECT CUST_ID, CUST_TYPE, LAST_NAME, FIRST_NAME, MIDDLE_INIT, " +
-            "COMPANY_NAME, ADDR_LINE1, ADDR_LINE2, CITY, STATE_CODE, ZIP_CODE, " +
-            "COUNTRY_CODE, PHONE, EMAIL, DATE_OF_BIRTH, SSN_LAST4, TAX_ID, " +
-            "CREDIT_SCORE, RISK_TIER, GDPR_CONSENT, CREATED_DATE, LAST_UPDATED " +
+            "SELECT CUST_ID, CUST_TYPE, " +
+            "LAST_NAME, FIRST_NAME, " +
+            "COMPANY_NAME, PHONE, EMAIL " +
             "FROM ACMEINS.POLICY_HOLDERS " +
             "WHERE CUST_ID = ?";
 
@@ -125,38 +124,12 @@ public class PolicyRepository {
                     rs.getString("LAST_NAME").trim() : null);
             customer.setFirstName(rs.getString("FIRST_NAME") != null ?
                     rs.getString("FIRST_NAME").trim() : null);
-            customer.setMiddleInit(rs.getString("MIDDLE_INIT") != null ?
-                    rs.getString("MIDDLE_INIT").trim() : null);
             customer.setCompanyName(rs.getString("COMPANY_NAME") != null ?
                     rs.getString("COMPANY_NAME").trim() : null);
-            customer.setAddrLine1(rs.getString("ADDR_LINE1") != null ?
-                    rs.getString("ADDR_LINE1").trim() : null);
-            customer.setAddrLine2(rs.getString("ADDR_LINE2") != null ?
-                    rs.getString("ADDR_LINE2").trim() : null);
-            customer.setCity(rs.getString("CITY") != null ?
-                    rs.getString("CITY").trim() : null);
-            customer.setStateCode(rs.getString("STATE_CODE") != null ?
-                    rs.getString("STATE_CODE").trim() : null);
-            customer.setZipCode(rs.getString("ZIP_CODE") != null ?
-                    rs.getString("ZIP_CODE").trim() : null);
-            customer.setCountryCode(rs.getString("COUNTRY_CODE") != null ?
-                    rs.getString("COUNTRY_CODE").trim() : null);
             customer.setPhone(rs.getString("PHONE") != null ?
                     rs.getString("PHONE").trim() : null);
             customer.setEmail(rs.getString("EMAIL") != null ?
                     rs.getString("EMAIL").trim() : null);
-            customer.setDateOfBirth(rs.getDate("DATE_OF_BIRTH"));
-            customer.setSsnLast4(rs.getString("SSN_LAST4") != null ?
-                    rs.getString("SSN_LAST4").trim() : null);
-            customer.setTaxId(rs.getString("TAX_ID") != null ?
-                    rs.getString("TAX_ID").trim() : null);
-            customer.setCreditScore(rs.getInt("CREDIT_SCORE"));
-            customer.setRiskTier(rs.getString("RISK_TIER") != null ?
-                    rs.getString("RISK_TIER").trim() : null);
-            customer.setGdprConsent(rs.getString("GDPR_CONSENT") != null ?
-                    rs.getString("GDPR_CONSENT").trim() : null);
-            customer.setCreatedDate(rs.getDate("CREATED_DATE"));
-            customer.setLastUpdated(rs.getTimestamp("LAST_UPDATED"));
             return customer;
         }
     }
