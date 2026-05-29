@@ -6,6 +6,7 @@ import com.acme.insurance.pas.repository.PolicyRepository;
 import com.acme.insurance.pas.repository.PolicyRepository.PolicyCustomerData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -32,6 +33,7 @@ public class UnderwritingService {
     @Autowired
     private PolicyRepository policyRepository;
 
+    @Transactional
     public UnderwritingResponse evaluate(String policyNumber) {
 
         // 1000-INITIALIZE
@@ -103,6 +105,7 @@ public class UnderwritingService {
 
         // 5000-RENDER-DECISION
         String decisionCode;
+        String accumulationReason = decisionReason;
         if (riskScore < 300) {
             decisionCode = "AP";
             decisionReason = "AUTO-ACCEPTED: LOW RISK";
@@ -115,6 +118,9 @@ public class UnderwritingService {
         } else {
             decisionCode = "DC";
             decisionReason = "AUTO-DECLINED: HIGH RISK";
+        }
+        if (!accumulationReason.isEmpty()) {
+            decisionReason = accumulationReason + " - " + decisionReason;
         }
 
         // 6000-WRITE-DECISION
