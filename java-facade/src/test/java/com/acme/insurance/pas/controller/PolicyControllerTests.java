@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.net.URI;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
@@ -52,6 +54,41 @@ public class PolicyControllerTests {
     public void getCoverages_policyNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/policies/NONEXISTENT/coverages"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void inquirePolicy_returnsFullInquiry() throws Exception {
+        mockMvc.perform(get("/api/v1/policies/POL-00000001/inquiry"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.policy.policyNumber", is("POL-00000001")))
+                .andExpect(jsonPath("$.policy.policyType", is("HOM")))
+                .andExpect(jsonPath("$.policy.policyStatus", is("AC")))
+                .andExpect(jsonPath("$.policy.totalPremium", is(1250.0)))
+                .andExpect(jsonPath("$.customer.custId", is("C000000001")))
+                .andExpect(jsonPath("$.customer.custType", is("I")))
+                .andExpect(jsonPath("$.customer.lastName", is("Smith")))
+                .andExpect(jsonPath("$.customer.firstName", is("John")))
+                .andExpect(jsonPath("$.customer.email", is("john.smith@example.com")))
+                .andExpect(jsonPath("$.customer.ssnLast4").doesNotExist())
+                .andExpect(jsonPath("$.customer.taxId").doesNotExist())
+                .andExpect(jsonPath("$.customer.creditScore").doesNotExist())
+                .andExpect(jsonPath("$.customer.dateOfBirth").doesNotExist())
+                .andExpect(jsonPath("$.coverages", hasSize(2)))
+                .andExpect(jsonPath("$.coverages[0].coverageType", is("DWEL")))
+                .andExpect(jsonPath("$.coverages[1].coverageType", is("PERS")));
+    }
+
+    @Test
+    public void inquirePolicy_notFound() throws Exception {
+        mockMvc.perform(get("/api/v1/policies/NONEXISTENT/inquiry"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void inquirePolicy_emptyPolicyNumber() throws Exception {
+        mockMvc.perform(get(new URI("/api/v1/policies/%20/inquiry")))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.acme.insurance.pas.repository;
 
 import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.model.Customer;
 import com.acme.insurance.pas.model.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -39,6 +40,13 @@ public class PolicyRepository {
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
 
+    private static final String FIND_CUSTOMER_SQL =
+            "SELECT CUST_ID, CUST_TYPE, " +
+            "LAST_NAME, FIRST_NAME, " +
+            "COMPANY_NAME, PHONE, EMAIL " +
+            "FROM ACMEINS.POLICY_HOLDERS " +
+            "WHERE CUST_ID = ?";
+
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
             "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, " +
@@ -53,6 +61,17 @@ public class PolicyRepository {
                 FIND_POLICY_SQL,
                 new Object[]{policyNumber},
                 new PolicyRowMapper());
+        if (results.isEmpty()) {
+            return null;
+        }
+        return results.get(0);
+    }
+
+    public Customer findCustomerById(String custId) {
+        List<Customer> results = jdbcTemplate.query(
+                FIND_CUSTOMER_SQL,
+                new Object[]{custId},
+                new CustomerRowMapper());
         if (results.isEmpty()) {
             return null;
         }
@@ -92,6 +111,26 @@ public class PolicyRepository {
             policy.setLastUpdated(rs.getTimestamp("LAST_UPDATED"));
             policy.setUpdatedBy(rs.getString("UPDATED_BY").trim());
             return policy;
+        }
+    }
+
+    private static class CustomerRowMapper implements RowMapper<Customer> {
+        @Override
+        public Customer mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Customer customer = new Customer();
+            customer.setCustId(rs.getString("CUST_ID").trim());
+            customer.setCustType(rs.getString("CUST_TYPE").trim());
+            customer.setLastName(rs.getString("LAST_NAME") != null ?
+                    rs.getString("LAST_NAME").trim() : null);
+            customer.setFirstName(rs.getString("FIRST_NAME") != null ?
+                    rs.getString("FIRST_NAME").trim() : null);
+            customer.setCompanyName(rs.getString("COMPANY_NAME") != null ?
+                    rs.getString("COMPANY_NAME").trim() : null);
+            customer.setPhone(rs.getString("PHONE") != null ?
+                    rs.getString("PHONE").trim() : null);
+            customer.setEmail(rs.getString("EMAIL") != null ?
+                    rs.getString("EMAIL").trim() : null);
+            return customer;
         }
     }
 
