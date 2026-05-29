@@ -98,6 +98,17 @@ def load_rating_factors(engine: Engine) -> RatingFactors:
         for row in rows:
             factors.territory[row[0].strip()] = Decimal(str(row[1]))
 
+        rows = conn.execute(
+            text(
+                "SELECT CLASS_CODE, RATING_FACTOR "
+                "FROM CLASS_CODE_FACTORS "
+                "WHERE EFFECTIVE_DATE <= CURRENT_DATE "
+                "ORDER BY CLASS_CODE"
+            )
+        ).fetchall()
+        for row in rows:
+            factors.class_code[row[0].strip()] = Decimal(str(row[1]))
+
     logger.info(
         "Loaded %d territory factors, %d class factors",
         len(factors.territory),
