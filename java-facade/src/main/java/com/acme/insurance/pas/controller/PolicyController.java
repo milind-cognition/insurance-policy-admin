@@ -2,12 +2,15 @@ package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.PremiumCalcResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.PremiumBatchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,6 +38,15 @@ public class PolicyController {
 
     @Autowired
     private PolicyRepository policyRepository;
+
+    @Autowired
+    private PremiumBatchService premiumBatchService;
+
+    @PostMapping("/premium-calculation")
+    public ResponseEntity<PremiumCalcResponse> calculatePremiums() {
+        PremiumCalcResponse response = premiumBatchService.calculatePremiums();
+        return new ResponseEntity<PremiumCalcResponse>(response, HttpStatus.OK);
+    }
 
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {

@@ -10,6 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
@@ -52,6 +53,24 @@ public class PolicyControllerTests {
     public void getCoverages_policyNotFound() throws Exception {
         mockMvc.perform(get("/api/v1/policies/NONEXISTENT/coverages"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void premiumCalculation_returnsCorrectCounts() throws Exception {
+        mockMvc.perform(post("/api/v1/policies/premium-calculation"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.policiesRead", is(3)))
+                .andExpect(jsonPath("$.policiesUpdated", is(3)))
+                .andExpect(jsonPath("$.policiesError", is(0)))
+                .andExpect(jsonPath("$.results", hasSize(3)))
+                .andExpect(jsonPath("$.results[0].status", is("SUCCESS")))
+                .andExpect(jsonPath("$.results[0].policyNumber", is("POL-00000001")))
+                .andExpect(jsonPath("$.results[0].policyType", is("HOM")))
+                .andExpect(jsonPath("$.results[0].basePremium", is(1200.0)))
+                .andExpect(jsonPath("$.results[0].taxAmount", is(42.0)))
+                .andExpect(jsonPath("$.results[0].surchargeAmount", is(25.0)))
+                .andExpect(jsonPath("$.results[0].totalPremium", is(1267.0)));
     }
 
     @Test
