@@ -92,7 +92,7 @@ def load_rating_factors(engine: Engine) -> RatingFactors:
                 "SELECT TERRITORY_CODE, RATING_FACTOR "
                 "FROM TERRITORY_FACTORS "
                 "WHERE EFFECTIVE_DATE <= CURRENT_DATE "
-                "ORDER BY TERRITORY_CODE"
+                "ORDER BY TERRITORY_CODE, EFFECTIVE_DATE"
             )
         ).fetchall()
         for row in rows:
@@ -103,7 +103,7 @@ def load_rating_factors(engine: Engine) -> RatingFactors:
                 "SELECT CLASS_CODE, RATING_FACTOR "
                 "FROM CLASS_CODE_FACTORS "
                 "WHERE EFFECTIVE_DATE <= CURRENT_DATE "
-                "ORDER BY CLASS_CODE"
+                "ORDER BY CLASS_CODE, EFFECTIVE_DATE"
             )
         ).fetchall()
         for row in rows:
