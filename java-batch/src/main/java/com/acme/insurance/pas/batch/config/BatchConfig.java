@@ -16,6 +16,7 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.batch.item.support.SynchronizedItemStreamReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -50,6 +51,14 @@ public class BatchConfig {
                 .sql(PolicyRepository.SELECT_ACTIVE_POLICIES)
                 .rowMapper(new PolicyRepository.PolicyRowMapper())
                 .build();
+    }
+
+    @Bean
+    public SynchronizedItemStreamReader<Policy> synchronizedPolicyReader(
+            JdbcCursorItemReader<Policy> policyReader) {
+        SynchronizedItemStreamReader<Policy> synchronizedReader = new SynchronizedItemStreamReader<>();
+        synchronizedReader.setDelegate(policyReader);
+        return synchronizedReader;
     }
 
     @Bean
@@ -90,14 +99,14 @@ public class BatchConfig {
     @Bean
     public Step premiumStep(JobRepository jobRepository,
                             PlatformTransactionManager transactionManager,
-                            JdbcCursorItemReader<Policy> policyReader,
+                            SynchronizedItemStreamReader<Policy> synchronizedPolicyReader,
                             ItemProcessor<Policy, PremiumRecord> premiumProcessor,
                             ItemWriter<PremiumRecord> premiumWriter,
                             PremiumReportWriter reportWriter,
                             TaskExecutor batchTaskExecutor) {
         return new StepBuilder("premiumStep", jobRepository)
                 .<Policy, PremiumRecord>chunk(chunkSize, transactionManager)
-                .reader(policyReader)
+                .reader(synchronizedPolicyReader)
                 .processor(premiumProcessor)
                 .writer(premiumWriter)
                 .taskExecutor(batchTaskExecutor)

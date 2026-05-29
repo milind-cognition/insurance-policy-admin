@@ -26,4 +26,4 @@ premium:
     HLT: 3500.00
   default-base-rate: 1000.00
   chunk-size: 10
-  thread-pool-size: 1
+  thread-pool-size: 2
