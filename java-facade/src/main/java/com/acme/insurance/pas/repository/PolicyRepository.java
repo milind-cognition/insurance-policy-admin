@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -130,8 +131,8 @@ public class PolicyRepository {
                             return new long[]{rs.getLong(1), rs.getBigDecimal(2).longValue()};
                         }
                     });
-        } catch (DataAccessException e) {
-            log.warn("Claims query failed for policy {}, treating as 0 claims: {}",
+        } catch (BadSqlGrammarException e) {
+            log.warn("Claims table may not exist for policy {}, treating as 0 claims: {}",
                     policyNumber, e.getMessage());
             return new long[]{0, 0};
         }
