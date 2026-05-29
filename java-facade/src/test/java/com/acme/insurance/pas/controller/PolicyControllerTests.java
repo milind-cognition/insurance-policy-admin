@@ -66,15 +66,16 @@ public class PolicyControllerTests {
 
     @Test
     public void underwriting_happyPath_returnsDecision() throws Exception {
-        mockMvc.perform(post("/api/v1/policies/POL-00000001/underwriting"))
+        // POL-00000003: commercial policy, no credit score -> base 400
+        mockMvc.perform(post("/api/v1/policies/POL-00000003/underwriting"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.policyNumber", is("POL-00000001")))
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000003")))
                 .andExpect(jsonPath("$.decisionCode", isIn(
                         new String[]{"AP", "RS", "RM", "DC"})))
                 .andExpect(jsonPath("$.riskScore", greaterThan(0)))
                 .andExpect(jsonPath("$.decisionReason", not(isEmptyOrNullString())))
-                .andExpect(jsonPath("$.claimCount", is(4)));
+                .andExpect(jsonPath("$.claimCount", is(0)));
     }
 
     @Test

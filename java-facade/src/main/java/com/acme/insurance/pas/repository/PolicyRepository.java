@@ -57,18 +57,17 @@ public class PolicyRepository {
             "COALESCE(SUM(INCURRED_AMOUNT), 0) AS TOTAL_INCURRED " +
             "FROM ACMEINS.CLAIMS " +
             "WHERE POLICY_NUMBER = ? " +
-            "AND CLAIM_DATE >= DATEADD('YEAR', -5, CURRENT_DATE)";
+            "AND CLAIM_DATE >= CURRENT_DATE - INTERVAL '5' YEAR";
 
     private static final String ACCUMULATED_LIMIT_SQL =
             "SELECT COALESCE(SUM(COVERAGE_LIMIT), 0) AS ACCUM_LIMIT " +
             "FROM ACMEINS.POLICIES " +
             "WHERE BRANCH_CODE = ? AND POLICY_STATUS = 'AC'";
 
-    private static final String MERGE_UW_DECISION_SQL =
-            "MERGE INTO ACMEINS.UNDERWRITING_DECISIONS " +
+    private static final String INSERT_UW_DECISION_SQL =
+            "INSERT INTO ACMEINS.UNDERWRITING_DECISIONS " +
             "(POLICY_NUMBER, DECISION_DATE, DECISION_CODE, RISK_SCORE, " +
             "DECISION_REASON, UNDERWRITER_ID, CREATED_TIMESTAMP) " +
-            "KEY (POLICY_NUMBER, DECISION_DATE) " +
             "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     private static final String UPDATE_POLICY_UW_SQL =
@@ -126,7 +125,7 @@ public class PolicyRepository {
     }
 
     public void insertUnderwritingDecision(UnderwritingDecision decision) {
-        jdbcTemplate.update(MERGE_UW_DECISION_SQL,
+        jdbcTemplate.update(INSERT_UW_DECISION_SQL,
                 decision.getPolicyNumber(),
                 decision.getDecisionDate(),
                 decision.getDecisionCode(),

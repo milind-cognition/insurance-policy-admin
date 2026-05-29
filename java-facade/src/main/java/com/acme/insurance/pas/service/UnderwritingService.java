@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -50,6 +51,7 @@ public class UnderwritingService {
      * @return response with risk score and decision, or null if policy not found
      * @throws IllegalArgumentException if policyNumber is blank
      */
+    @Transactional
     public UnderwritingResponse evaluateRisk(String policyNumber) {
         // 1000-INITIALIZE
         if (policyNumber == null || policyNumber.trim().isEmpty()) {
