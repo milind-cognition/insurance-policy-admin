@@ -180,7 +180,23 @@ def _process_partition(
     )
 
     engine = _build_engine(db_url)
+    try:
+        return _run_partition_with_engine(
+            engine, policy_type, factors, batch_size, calc_date, result, log,
+        )
+    finally:
+        engine.dispose()
 
+
+def _run_partition_with_engine(
+    engine: Engine,
+    policy_type: str,
+    factors: RatingFactors,
+    batch_size: int,
+    calc_date: str,
+    result: PartitionResult,
+    log: logging.Logger,
+) -> PartitionResult:
     select_sql = text(
         "SELECT p.POLICY_NUMBER, p.POLICY_TYPE, "
         "       p.TOTAL_PREMIUM, p.DEDUCTIBLE, p.COVERAGE_LIMIT, "
