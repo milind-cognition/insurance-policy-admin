@@ -8,8 +8,6 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.stereotype.Component;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -18,7 +16,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * Tracks policies processed, updated, and errors; logs a summary at step completion.
  */
-@Component
 public class PremiumReportWriter implements ItemWriter<PremiumRecord>, StepExecutionListener {
 
     private static final Logger log = LoggerFactory.getLogger(PremiumReportWriter.class);
