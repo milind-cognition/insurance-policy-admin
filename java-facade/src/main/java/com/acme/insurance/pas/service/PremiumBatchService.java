@@ -81,6 +81,7 @@ public class PremiumBatchService {
             premium.setTaxAmt(taxAmt);
             premium.setTotalPremium(totalPremium);
             premium.setInstallmentCode(INSTALLMENT_CODE);
+            premium.setInstallmentAmt(totalPremium);
             premium.setCalcDate(calcDate);
             premium.setCalcBy(CALC_BY);
 
