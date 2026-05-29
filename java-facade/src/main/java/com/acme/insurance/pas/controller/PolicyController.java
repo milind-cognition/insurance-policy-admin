@@ -2,12 +2,16 @@ package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.UnderwritingResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.UnderwritingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,6 +40,9 @@ public class PolicyController {
     @Autowired
     private PolicyRepository policyRepository;
 
+    @Autowired
+    private UnderwritingService underwritingService;
+
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {
         Policy policy = policyRepository.findByPolicyNumber(policyNumber);
@@ -56,5 +63,18 @@ public class PolicyController {
         List<Coverage> coverages = policyRepository.findCoveragesByPolicyNumber(
                 policyNumber);
         return new ResponseEntity<List<Coverage>>(coverages, HttpStatus.OK);
+    }
+
+    @PostMapping("/{policyNumber}/underwrite")
+    public ResponseEntity<UnderwritingResponse> underwrite(
+            @PathVariable String policyNumber) {
+        try {
+            UnderwritingResponse response = underwritingService.evaluate(policyNumber);
+            return new ResponseEntity<UnderwritingResponse>(response, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<UnderwritingResponse>(HttpStatus.BAD_REQUEST);
+        } catch (DuplicateKeyException e) {
+            return new ResponseEntity<UnderwritingResponse>(HttpStatus.CONFLICT);
+        }
     }
 }

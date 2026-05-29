@@ -139,6 +139,18 @@ CREATE TABLE IF NOT EXISTS ACMEINS.ENDORSEMENTS (
 );
 
 ------------------------------------------------------------------------
+-- CLAIMS
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ACMEINS.CLAIMS (
+    CLAIM_ID            INTEGER         NOT NULL AUTO_INCREMENT,
+    POLICY_NUMBER       CHAR(12)        NOT NULL,
+    CLAIM_DATE          DATE            NOT NULL,
+    CLAIM_STATUS        VARCHAR(10)     NOT NULL DEFAULT 'OPEN',
+    INCURRED_AMOUNT     DECIMAL(11,2)   DEFAULT 0,
+    CONSTRAINT PK_CLAIMS PRIMARY KEY (CLAIM_ID)
+);
+
+------------------------------------------------------------------------
 -- UNDERWRITING_DECISIONS
 ------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS ACMEINS.UNDERWRITING_DECISIONS (

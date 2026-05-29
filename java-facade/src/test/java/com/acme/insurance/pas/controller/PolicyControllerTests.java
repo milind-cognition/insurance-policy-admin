@@ -10,6 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
@@ -59,5 +60,31 @@ public class PolicyControllerTests {
         mockMvc.perform(get("/manage/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("UP")));
+    }
+
+    @Test
+    public void underwrite_success_lowRisk() throws Exception {
+        mockMvc.perform(post("/api/v1/policies/POL-00000001/underwrite"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000001")))
+                .andExpect(jsonPath("$.riskScore", is(90)))
+                .andExpect(jsonPath("$.decisionCode", is("AP")))
+                .andExpect(jsonPath("$.decisionReason", is("AUTO-ACCEPTED: LOW RISK")))
+                .andExpect(jsonPath("$.message", is("UNDERWRITING EVALUATION COMPLETE")));
+    }
+
+    @Test
+    public void underwrite_policyNotFound() throws Exception {
+        mockMvc.perform(post("/api/v1/policies/NONEXISTENT/underwrite"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void underwrite_moderateRisk() throws Exception {
+        mockMvc.perform(post("/api/v1/policies/POL-00000002/underwrite"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000002")))
+                .andExpect(jsonPath("$.riskScore", is(110)))
+                .andExpect(jsonPath("$.decisionCode", is("AP")));
     }
 }
