@@ -1,14 +1,18 @@
 package com.acme.insurance.pas.repository;
 
 import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.model.Customer;
 import com.acme.insurance.pas.model.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,6 +42,36 @@ public class PolicyRepository {
             "LAST_UPDATED, UPDATED_BY " +
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
+
+    private static final String FIND_CUSTOMER_SQL =
+            "SELECT CUST_ID, CUST_TYPE, LAST_NAME, FIRST_NAME, " +
+            "MIDDLE_INIT, COMPANY_NAME, ADDR_LINE1, ADDR_LINE2, " +
+            "CITY, STATE_CODE, ZIP_CODE, COUNTRY_CODE, " +
+            "PHONE, EMAIL, DATE_OF_BIRTH, SSN_LAST4, TAX_ID, " +
+            "CREDIT_SCORE, RISK_TIER, GDPR_CONSENT, " +
+            "CREATED_DATE, LAST_UPDATED " +
+            "FROM ACMEINS.POLICY_HOLDERS " +
+            "WHERE CUST_ID = ?";
+
+    private static final String NEXT_POLICY_SEQ_SQL =
+            "SELECT NEXT VALUE FOR ACMEINS.POLICY_SEQ FROM (VALUES(0))";
+
+    private static final String INSERT_POLICY_SQL =
+            "INSERT INTO ACMEINS.POLICIES " +
+            "(POLICY_NUMBER, POLICY_TYPE, POLICY_STATUS, " +
+            "EFFECTIVE_DATE, EXPIRY_DATE, POLICYHOLDER_ID, " +
+            "AGENT_CODE, BRANCH_CODE, TOTAL_PREMIUM, DEDUCTIBLE, " +
+            "COVERAGE_LIMIT, INCEPTION_DATE, RENEWAL_COUNT, " +
+            "UW_STATUS, RISK_SCORE, WEB_INDICATOR, API_FLAG, " +
+            "LAST_UPDATED, UPDATED_BY) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)";
+
+    private static final String INSERT_COVERAGE_SQL =
+            "INSERT INTO ACMEINS.COVERAGES " +
+            "(POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
+            "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, " +
+            "PREMIUM, EFFECTIVE_DATE, EXPIRY_DATE, STATUS) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'AC')";
 
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
@@ -92,6 +126,102 @@ public class PolicyRepository {
             policy.setLastUpdated(rs.getTimestamp("LAST_UPDATED"));
             policy.setUpdatedBy(rs.getString("UPDATED_BY").trim());
             return policy;
+        }
+    }
+
+    public Customer findCustomerById(String custId) {
+        List<Customer> results = jdbcTemplate.query(
+                FIND_CUSTOMER_SQL,
+                new Object[]{custId},
+                new CustomerRowMapper());
+        if (results.isEmpty()) {
+            return null;
+        }
+        return results.get(0);
+    }
+
+    public long getNextPolicySequence() {
+        return jdbcTemplate.queryForObject(NEXT_POLICY_SEQ_SQL, Long.class);
+    }
+
+    public void insertPolicy(Policy policy) {
+        jdbcTemplate.update(INSERT_POLICY_SQL,
+                policy.getPolicyNumber(),
+                policy.getPolicyType(),
+                policy.getPolicyStatus(),
+                policy.getEffectiveDate(),
+                policy.getExpiryDate(),
+                policy.getPolicyholderId(),
+                policy.getAgentCode(),
+                policy.getBranchCode(),
+                policy.getTotalPremium(),
+                policy.getDeductible(),
+                policy.getCoverageLimit(),
+                policy.getInceptionDate(),
+                policy.getRenewalCount(),
+                policy.getUwStatus(),
+                policy.getRiskScore(),
+                policy.getWebIndicator(),
+                policy.getApiFlag(),
+                policy.getUpdatedBy());
+    }
+
+    public void insertCoverage(Coverage coverage) {
+        jdbcTemplate.update(INSERT_COVERAGE_SQL,
+                coverage.getPolicyNumber(),
+                coverage.getSequenceNum(),
+                coverage.getCoverageType(),
+                coverage.getDescription(),
+                coverage.getCoverageLimit(),
+                coverage.getDeductible(),
+                coverage.getPremium(),
+                coverage.getEffectiveDate(),
+                coverage.getExpiryDate());
+    }
+
+    private static class CustomerRowMapper implements RowMapper<Customer> {
+        @Override
+        public Customer mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Customer customer = new Customer();
+            customer.setCustId(rs.getString("CUST_ID").trim());
+            customer.setCustType(rs.getString("CUST_TYPE").trim());
+            customer.setLastName(rs.getString("LAST_NAME") != null ?
+                    rs.getString("LAST_NAME").trim() : null);
+            customer.setFirstName(rs.getString("FIRST_NAME") != null ?
+                    rs.getString("FIRST_NAME").trim() : null);
+            customer.setMiddleInit(rs.getString("MIDDLE_INIT") != null ?
+                    rs.getString("MIDDLE_INIT").trim() : null);
+            customer.setCompanyName(rs.getString("COMPANY_NAME") != null ?
+                    rs.getString("COMPANY_NAME").trim() : null);
+            customer.setAddrLine1(rs.getString("ADDR_LINE1") != null ?
+                    rs.getString("ADDR_LINE1").trim() : null);
+            customer.setAddrLine2(rs.getString("ADDR_LINE2") != null ?
+                    rs.getString("ADDR_LINE2").trim() : null);
+            customer.setCity(rs.getString("CITY") != null ?
+                    rs.getString("CITY").trim() : null);
+            customer.setStateCode(rs.getString("STATE_CODE") != null ?
+                    rs.getString("STATE_CODE").trim() : null);
+            customer.setZipCode(rs.getString("ZIP_CODE") != null ?
+                    rs.getString("ZIP_CODE").trim() : null);
+            customer.setCountryCode(rs.getString("COUNTRY_CODE") != null ?
+                    rs.getString("COUNTRY_CODE").trim() : null);
+            customer.setPhone(rs.getString("PHONE") != null ?
+                    rs.getString("PHONE").trim() : null);
+            customer.setEmail(rs.getString("EMAIL") != null ?
+                    rs.getString("EMAIL").trim() : null);
+            customer.setDateOfBirth(rs.getDate("DATE_OF_BIRTH"));
+            customer.setSsnLast4(rs.getString("SSN_LAST4") != null ?
+                    rs.getString("SSN_LAST4").trim() : null);
+            customer.setTaxId(rs.getString("TAX_ID") != null ?
+                    rs.getString("TAX_ID").trim() : null);
+            customer.setCreditScore(rs.getInt("CREDIT_SCORE"));
+            customer.setRiskTier(rs.getString("RISK_TIER") != null ?
+                    rs.getString("RISK_TIER").trim() : null);
+            customer.setGdprConsent(rs.getString("GDPR_CONSENT") != null ?
+                    rs.getString("GDPR_CONSENT").trim() : null);
+            customer.setCreatedDate(rs.getDate("CREATED_DATE"));
+            customer.setLastUpdated(rs.getTimestamp("LAST_UPDATED"));
+            return customer;
         }
     }
 
