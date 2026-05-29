@@ -3,6 +3,7 @@ package com.acme.insurance.pas.service;
 import com.acme.insurance.pas.dto.PremiumBatchSummary;
 import com.acme.insurance.pas.model.Policy;
 import com.acme.insurance.pas.model.Premium;
+import com.acme.insurance.pas.repository.CoverageRepository;
 import com.acme.insurance.pas.repository.PolicyRepository;
 import com.acme.insurance.pas.repository.PremiumRepository;
 import com.acme.insurance.pas.repository.TerritoryFactorRepository;
@@ -33,13 +34,22 @@ class PremiumCalculationServiceTest {
     private PremiumRepository premiumRepository;
     @Mock
     private TerritoryFactorRepository territoryFactorRepository;
+    @Mock
+    private CoverageRepository coverageRepository;
 
     private PremiumCalculationService service;
 
     @BeforeEach
     void setUp() {
         service = new PremiumCalculationService(policyRepository,
-                premiumRepository, territoryFactorRepository);
+                premiumRepository, territoryFactorRepository, coverageRepository);
+    }
+
+    private void stubDefaultMocks() {
+        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
+                .thenReturn(Collections.emptyList());
+        when(coverageRepository.findByPolicyNumberOrderBySequenceNum(any()))
+                .thenReturn(Collections.emptyList());
     }
 
     private Policy buildPolicy(String type) {
@@ -60,8 +70,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_autoBaseRate850() {
         Policy auto = buildPolicy("AUT");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(auto));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         PremiumBatchSummary summary = service.calculateAllPremiums();
@@ -89,8 +98,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_homeBaseRate1200() {
         Policy home = buildPolicy("HOM");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(home));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.calculateAllPremiums();
@@ -104,8 +112,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_commercialBaseRate5000() {
         Policy com = buildPolicy("COM");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(com));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.calculateAllPremiums();
@@ -119,8 +126,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_lifeBaseRate400() {
         Policy life = buildPolicy("LIF");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(life));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.calculateAllPremiums();
@@ -134,8 +140,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_healthBaseRate3500() {
         Policy health = buildPolicy("HLT");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(health));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.calculateAllPremiums();
@@ -149,8 +154,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_unknownType_defaultRate1000() {
         Policy unknown = buildPolicy("XYZ");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(unknown));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.calculateAllPremiums();
@@ -164,8 +168,7 @@ class PremiumCalculationServiceTest {
     void calculateAllPremiums_taxAndSurchargeCalculation() {
         Policy auto = buildPolicy("AUT");
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(List.of(auto));
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
-                .thenReturn(Collections.emptyList());
+        stubDefaultMocks();
         when(premiumRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         service.calculateAllPremiums();

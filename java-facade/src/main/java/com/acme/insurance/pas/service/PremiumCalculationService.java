@@ -4,6 +4,8 @@ import com.acme.insurance.pas.dto.PremiumBatchSummary;
 import com.acme.insurance.pas.model.Policy;
 import com.acme.insurance.pas.model.Premium;
 import com.acme.insurance.pas.model.TerritoryFactor;
+import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.repository.CoverageRepository;
 import com.acme.insurance.pas.repository.PolicyRepository;
 import com.acme.insurance.pas.repository.PremiumRepository;
 import com.acme.insurance.pas.repository.TerritoryFactorRepository;
@@ -40,13 +42,16 @@ public class PremiumCalculationService {
     private final PolicyRepository policyRepository;
     private final PremiumRepository premiumRepository;
     private final TerritoryFactorRepository territoryFactorRepository;
+    private final CoverageRepository coverageRepository;
 
     public PremiumCalculationService(PolicyRepository policyRepository,
                                      PremiumRepository premiumRepository,
-                                     TerritoryFactorRepository territoryFactorRepository) {
+                                     TerritoryFactorRepository territoryFactorRepository,
+                                     CoverageRepository coverageRepository) {
         this.policyRepository = policyRepository;
         this.premiumRepository = premiumRepository;
         this.territoryFactorRepository = territoryFactorRepository;
+        this.coverageRepository = coverageRepository;
     }
 
     @Transactional
@@ -82,7 +87,16 @@ public class PremiumCalculationService {
                                      LocalDate calcDate) {
         BigDecimal baseRate = BASE_RATES.getOrDefault(policy.getPolicyType(), DEFAULT_BASE_RATE);
 
+        List<Coverage> coverages = coverageRepository
+                .findByPolicyNumberOrderBySequenceNum(policy.getPolicyNumber());
         BigDecimal territoryFactor = BigDecimal.ONE;
+        for (Coverage cov : coverages) {
+            if (cov.getRatingTerritory() != null && !cov.getRatingTerritory().isBlank()) {
+                territoryFactor = territoryFactors.getOrDefault(
+                        cov.getRatingTerritory().trim(), BigDecimal.ONE);
+                break;
+            }
+        }
         BigDecimal classFactor = BigDecimal.ONE;
         BigDecimal experienceMod = BigDecimal.ONE;
 

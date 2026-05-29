@@ -58,16 +58,21 @@ public class EndorsementService {
         endorsement.setEndorsementType(request.getEndorsementType());
         endorsement.setEffectiveDate(LocalDate.now());
         endorsement.setDescription(request.getDescription());
-        endorsement.setPremiumAdjustment(request.getPremiumAdjustment() != null
-                ? request.getPremiumAdjustment() : BigDecimal.ZERO);
+        BigDecimal proratedAdjustment = BigDecimal.ZERO;
+        if (request.getPremiumAdjustment() != null) {
+            proratedAdjustment = request.getPremiumAdjustment()
+                    .multiply(proRataFactor)
+                    .setScale(2, RoundingMode.HALF_UP);
+        }
+        endorsement.setPremiumAdjustment(proratedAdjustment);
         endorsement.setProcessedDate(LocalDateTime.now());
         endorsement.setProcessedBy("POLEND");
 
         endorsementRepository.save(endorsement);
 
-        if (request.getPremiumAdjustment() != null) {
+        if (proratedAdjustment.compareTo(BigDecimal.ZERO) != 0) {
             policy.setTotalPremium(
-                    policy.getTotalPremium().add(request.getPremiumAdjustment()));
+                    policy.getTotalPremium().add(proratedAdjustment));
         }
         policy.setLastUpdated(LocalDateTime.now());
         policy.setUpdatedBy("POLEND");

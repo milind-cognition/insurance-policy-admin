@@ -91,7 +91,7 @@ class EndorsementServiceTest {
     }
 
     @Test
-    void processEndorsement_success_updatesPremium() {
+    void processEndorsement_success_appliesProRata() {
         Policy p = buildActivePolicy();
         EndorsementRequest req = new EndorsementRequest();
         req.setPolicyNumber(p.getPolicyNumber());
@@ -109,7 +109,12 @@ class EndorsementServiceTest {
 
         assertEquals(1, result.getEndorsementSeq());
         assertEquals("CAD", result.getEndorsementType());
-        assertEquals(new BigDecimal("1200.00"), p.getTotalPremium());
+        // Pro-rata factor applies: adjustment is less than or equal to 200.00
+        // (exactly 200.00 only if full term remains)
+        assertTrue(result.getPremiumAdjustment().compareTo(new BigDecimal("200.00")) <= 0);
+        assertTrue(result.getPremiumAdjustment().compareTo(BigDecimal.ZERO) > 0);
+        // Policy total should be original + prorated adjustment
+        assertTrue(p.getTotalPremium().compareTo(new BigDecimal("1000.00")) > 0);
     }
 
     @Test
@@ -128,6 +133,7 @@ class EndorsementServiceTest {
         Endorsement result = service.processEndorsement(req);
 
         assertEquals(3, result.getEndorsementSeq());
+        assertEquals(0, result.getPremiumAdjustment().compareTo(BigDecimal.ZERO));
         assertEquals(new BigDecimal("1000.00"), p.getTotalPremium());
     }
 }
