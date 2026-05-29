@@ -88,7 +88,7 @@ public class NewPolicyService {
     private Policy buildPolicy(String policyNumber, NewPolicyRequest request) {
         Policy policy = new Policy();
         policy.setPolicyNumber(policyNumber);
-        policy.setPolicyType(request.getPolicyType());
+        policy.setPolicyType(request.getPolicyType().toUpperCase());
         policy.setPolicyStatus("PN");
         policy.setEffectiveDate(isPresent(request.getEffectiveDate()) ?
                 parseDate(request.getEffectiveDate()) : new Date());
