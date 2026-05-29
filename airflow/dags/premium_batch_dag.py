@@ -123,6 +123,7 @@ def _calculate_and_insert_premiums(**context):
                 policy_number, policy_type, _total_premium, _deductible, _coverage_limit, eff_date, exp_date = row
                 policies_read += 1
                 try:
+                    insert_cursor.execute("SAVEPOINT sp_insert")
                     base, terr_f, cls_f, exp_m, tax, surcharge, final = calculate_premium(
                         str(policy_type).strip(),
                         None,  # territory_code not on POLICIES table
@@ -143,8 +144,10 @@ def _calculate_and_insert_premiums(**context):
                             str(final),
                         ),
                     )
+                    insert_cursor.execute("RELEASE SAVEPOINT sp_insert")
                     policies_updated += 1
                 except Exception:
+                    insert_cursor.execute("ROLLBACK TO SAVEPOINT sp_insert")
                     policies_error += 1
                     had_warning = True
                     log.exception(
