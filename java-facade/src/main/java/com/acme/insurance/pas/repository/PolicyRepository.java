@@ -1,14 +1,17 @@
 package com.acme.insurance.pas.repository;
 
 import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.model.Endorsement;
 import com.acme.insurance.pas.model.Policy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -117,5 +120,50 @@ public class PolicyRepository {
                     rs.getString("CLASS_CODE").trim() : null);
             return coverage;
         }
+    }
+
+    // ---- Endorsement methods (migrated from POLEND/PEND) ----
+
+    private static final String NEXT_ENDORSEMENT_SEQ_SQL =
+            "SELECT COALESCE(MAX(ENDORSEMENT_SEQ),0)+1 " +
+            "FROM ACMEINS.ENDORSEMENTS " +
+            "WHERE POLICY_NUMBER = ?";
+
+    private static final String INSERT_ENDORSEMENT_SQL =
+            "INSERT INTO ACMEINS.ENDORSEMENTS " +
+            "(POLICY_NUMBER, ENDORSEMENT_SEQ, ENDORSEMENT_TYPE, " +
+            "EFFECTIVE_DATE, DESCRIPTION, PREMIUM_ADJUSTMENT, " +
+            "PROCESSED_DATE, PROCESSED_BY) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+    private static final String UPDATE_POLICY_PREMIUM_SQL =
+            "UPDATE ACMEINS.POLICIES " +
+            "SET TOTAL_PREMIUM = TOTAL_PREMIUM + ?, LAST_UPDATED = ?, UPDATED_BY = 'POLEND' " +
+            "WHERE POLICY_NUMBER = ?";
+
+    public int getNextEndorsementSeq(String policyNumber) {
+        return jdbcTemplate.queryForObject(
+                NEXT_ENDORSEMENT_SEQ_SQL,
+                new Object[]{policyNumber},
+                Integer.class);
+    }
+
+    public void insertEndorsement(Endorsement endorsement) {
+        jdbcTemplate.update(INSERT_ENDORSEMENT_SQL,
+                endorsement.getPolicyNumber(),
+                endorsement.getEndorsementSeq(),
+                endorsement.getEndorsementType(),
+                endorsement.getEffectiveDate(),
+                endorsement.getDescription(),
+                endorsement.getPremiumAdjustment(),
+                new Timestamp(endorsement.getProcessedDate().getTime()),
+                endorsement.getProcessedBy());
+    }
+
+    public void updatePolicyPremium(String policyNumber, BigDecimal premiumAdjustment) {
+        jdbcTemplate.update(UPDATE_POLICY_PREMIUM_SQL,
+                premiumAdjustment,
+                new Timestamp(System.currentTimeMillis()),
+                policyNumber);
     }
 }

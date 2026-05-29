@@ -10,6 +10,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.hamcrest.Matchers.*;
 
@@ -59,5 +60,60 @@ public class PolicyControllerTests {
         mockMvc.perform(get("/manage/health"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("UP")));
+    }
+
+    // ---- Endorsement tests (POLEND migration) ----
+
+    @Test
+    public void postEndorsement_happyPath() throws Exception {
+        String body = "{\"endorsementType\":\"CAD\"," +
+                "\"premiumAdjustment\":200.00," +
+                "\"description\":\"Add flood coverage\"}";
+
+        mockMvc.perform(post("/api/v1/policies/POL-00000004/endorsements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.policyNumber", is("POL-00000004")))
+                .andExpect(jsonPath("$.endorsementSeq", is(1)))
+                .andExpect(jsonPath("$.endorsementType", is("CAD")))
+                .andExpect(jsonPath("$.prorataFactor").isNumber())
+                .andExpect(jsonPath("$.premiumAdjustment").isNumber())
+                .andExpect(jsonPath("$.newTotalPremium").isNumber());
+    }
+
+    @Test
+    public void postEndorsement_policyNotFound() throws Exception {
+        String body = "{\"endorsementType\":\"CAD\"," +
+                "\"premiumAdjustment\":100.00," +
+                "\"description\":\"Test\"}";
+
+        mockMvc.perform(post("/api/v1/policies/NONEXISTENT/endorsements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void postEndorsement_missingType() throws Exception {
+        String body = "{\"premiumAdjustment\":100.00," +
+                "\"description\":\"Missing type\"}";
+
+        mockMvc.perform(post("/api/v1/policies/POL-00000004/endorsements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void postEndorsement_expiredPolicy() throws Exception {
+        String body = "{\"endorsementType\":\"CAD\"," +
+                "\"premiumAdjustment\":100.00," +
+                "\"description\":\"Should fail - expired\"}";
+
+        mockMvc.perform(post("/api/v1/policies/POL-00000001/endorsements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
     }
 }
