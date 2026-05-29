@@ -53,6 +53,9 @@ public class PolicyRenewalService {
         }
 
         BigDecimal oldPremium = policy.getTotalPremium();
+        if (oldPremium == null || oldPremium.compareTo(BigDecimal.ZERO) == 0) {
+            throw new IllegalArgumentException("POLICY PREMIUM INVALID FOR RENEWAL");
+        }
 
         // 4000-CALCULATE-NEW-PREMIUM
         BigDecimal newPremium = oldPremium.multiply(STANDARD_RATE_INCREASE)

@@ -87,4 +87,11 @@ public class PolicyControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("POLICY NOT ELIGIBLE FOR RENEWAL"));
     }
+
+    @Test
+    public void renewPolicy_zeroPremium() throws Exception {
+        mockMvc.perform(put("/api/v1/policies/POL-00000005/renew"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("POLICY PREMIUM INVALID FOR RENEWAL"));
+    }
 }
