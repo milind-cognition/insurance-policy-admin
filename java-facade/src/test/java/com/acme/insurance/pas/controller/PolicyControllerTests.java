@@ -72,7 +72,7 @@ public class PolicyControllerTests {
                 .andExpect(jsonPath("$.customer.email", is("john.smith@example.com")))
                 .andExpect(jsonPath("$.customer.ssnLast4").doesNotExist())
                 .andExpect(jsonPath("$.customer.taxId").doesNotExist())
-                .andExpect(jsonPath("$.customer.creditScore", is(0)))
+                .andExpect(jsonPath("$.customer.creditScore").doesNotExist())
                 .andExpect(jsonPath("$.customer.dateOfBirth").doesNotExist())
                 .andExpect(jsonPath("$.coverages", hasSize(2)))
                 .andExpect(jsonPath("$.coverages[0].coverageType", is("DWEL")))

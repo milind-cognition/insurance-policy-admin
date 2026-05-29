@@ -1,5 +1,7 @@
 package com.acme.insurance.pas.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.Date;
 
 /**
@@ -8,6 +10,7 @@ import java.util.Date;
  *
  * @author Devin (2026) - migrated from COBOL CUSTOMER-RECORD copybook
  */
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Customer {
 
     private String custId;
@@ -27,7 +30,7 @@ public class Customer {
     private Date dateOfBirth;
     private String ssnLast4;
     private String taxId;
-    private int creditScore;
+    private Integer creditScore;
     private String riskTier;
     private String gdprConsent;
     private Date createdDate;
@@ -172,11 +175,11 @@ public class Customer {
         this.taxId = taxId;
     }
 
-    public int getCreditScore() {
+    public Integer getCreditScore() {
         return creditScore;
     }
 
-    public void setCreditScore(int creditScore) {
+    public void setCreditScore(Integer creditScore) {
         this.creditScore = creditScore;
     }
 
