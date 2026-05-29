@@ -2,16 +2,21 @@ package com.acme.insurance.pas.controller;
 
 import com.acme.insurance.pas.model.Coverage;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.PolicyInquiryResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
+import com.acme.insurance.pas.service.PolicyInquiryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Policy Controller - Read-only REST endpoints for policy data.
@@ -36,6 +41,9 @@ public class PolicyController {
     @Autowired
     private PolicyRepository policyRepository;
 
+    @Autowired
+    private PolicyInquiryService policyInquiryService;
+
     @GetMapping("/{policyNumber}")
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyNumber) {
         Policy policy = policyRepository.findByPolicyNumber(policyNumber);
@@ -43,6 +51,16 @@ public class PolicyController {
             return new ResponseEntity<Policy>(HttpStatus.NOT_FOUND);
         }
         return new ResponseEntity<Policy>(policy, HttpStatus.OK);
+    }
+
+    @GetMapping("/{policyNumber}/inquiry")
+    public ResponseEntity<PolicyInquiryResponse> inquirePolicy(
+            @PathVariable String policyNumber) {
+        PolicyInquiryResponse response = policyInquiryService.inquire(policyNumber);
+        if (response == null) {
+            return new ResponseEntity<PolicyInquiryResponse>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<PolicyInquiryResponse>(response, HttpStatus.OK);
     }
 
     @GetMapping("/{policyNumber}/coverages")
@@ -56,5 +74,12 @@ public class PolicyController {
         List<Coverage> coverages = policyRepository.findCoveragesByPolicyNumber(
                 policyNumber);
         return new ResponseEntity<List<Coverage>>(coverages, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(
+            IllegalArgumentException ex) {
+        Map<String, String> error = Collections.singletonMap("error", ex.getMessage());
+        return new ResponseEntity<Map<String, String>>(error, HttpStatus.BAD_REQUEST);
     }
 }

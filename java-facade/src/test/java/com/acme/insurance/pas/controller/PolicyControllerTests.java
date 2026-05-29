@@ -55,6 +55,37 @@ public class PolicyControllerTests {
     }
 
     @Test
+    public void inquirePolicy_returnsFullInquiry() throws Exception {
+        mockMvc.perform(get("/api/v1/policies/POL-00000001/inquiry"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.policy.policyNumber", is("POL-00000001")))
+                .andExpect(jsonPath("$.policy.policyType", is("HOM")))
+                .andExpect(jsonPath("$.policy.policyStatus", is("AC")))
+                .andExpect(jsonPath("$.policy.totalPremium", is(1250.0)))
+                .andExpect(jsonPath("$.customer.custId", is("C000000001")))
+                .andExpect(jsonPath("$.customer.lastName", is("Smith")))
+                .andExpect(jsonPath("$.customer.firstName", is("John")))
+                .andExpect(jsonPath("$.customer.email", is("john.smith@example.com")))
+                .andExpect(jsonPath("$.coverages", hasSize(2)))
+                .andExpect(jsonPath("$.coverages[0].coverageType", is("DWEL")))
+                .andExpect(jsonPath("$.coverages[1].coverageType", is("PERS")));
+    }
+
+    @Test
+    public void inquirePolicy_notFound() throws Exception {
+        mockMvc.perform(get("/api/v1/policies/NONEXISTENT/inquiry"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void inquirePolicy_blankPolicyNumber_returnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/policies/ /inquiry"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("POLICY NUMBER IS REQUIRED")));
+    }
+
+    @Test
     public void healthCheck_returnsUp() throws Exception {
         mockMvc.perform(get("/manage/health"))
                 .andExpect(status().isOk())
