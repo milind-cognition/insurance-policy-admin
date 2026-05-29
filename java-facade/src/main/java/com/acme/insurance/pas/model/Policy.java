@@ -1,38 +1,92 @@
 package com.acme.insurance.pas.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-/**
- * Policy domain model.
- * Maps to ACMEINS.POLICIES DB2 table on the mainframe.
- *
- * NOTE: Using old-style Java bean pattern (no Lombok, no records)
- * for compatibility with Java 8 and Spring Boot 1.5.
- *
- * @author T. Nguyen (2022)
- */
+@Entity
+@Table(name = "POLICIES", schema = "ACMEINS")
 public class Policy {
 
+    public static final String STATUS_ACTIVE = "AC";
+    public static final String STATUS_PENDING = "PN";
+    public static final String STATUS_CANCELLED = "CN";
+    public static final String STATUS_EXPIRED = "EX";
+    public static final String STATUS_LAPSED = "LP";
+
+    public static final String TYPE_AUTO = "AUT";
+    public static final String TYPE_HOME = "HOM";
+    public static final String TYPE_COMMERCIAL = "COM";
+    public static final String TYPE_LIFE = "LIF";
+    public static final String TYPE_HEALTH = "HLT";
+
+    public static final String UW_PENDING = "PN";
+    public static final String UW_AUTO_ACCEPT = "AP";
+    public static final String UW_REFER_SENIOR = "RS";
+    public static final String UW_REFER_MANAGER = "RM";
+    public static final String UW_DECLINE = "DC";
+
+    @Id
+    @Column(name = "POLICY_NUMBER", length = 12, nullable = false)
     private String policyNumber;
+
+    @Column(name = "POLICY_TYPE", length = 3, nullable = false)
     private String policyType;
-    private String policyStatus;
-    private Date effectiveDate;
-    private Date expiryDate;
+
+    @Column(name = "POLICY_STATUS", length = 2, nullable = false)
+    private String policyStatus = STATUS_PENDING;
+
+    @Column(name = "EFFECTIVE_DATE", nullable = false)
+    private LocalDate effectiveDate;
+
+    @Column(name = "EXPIRY_DATE", nullable = false)
+    private LocalDate expiryDate;
+
+    @Column(name = "POLICYHOLDER_ID", length = 10, nullable = false)
     private String policyholderId;
+
+    @Column(name = "AGENT_CODE", length = 6)
     private String agentCode;
+
+    @Column(name = "BRANCH_CODE", length = 4)
     private String branchCode;
-    private BigDecimal totalPremium;
-    private BigDecimal deductible;
-    private BigDecimal coverageLimit;
-    private Date inceptionDate;
-    private int renewalCount;
-    private String uwStatus;
-    private int riskScore;
-    private String webIndicator;
-    private String apiFlag;
-    private Date lastUpdated;
-    private String updatedBy;
+
+    @Column(name = "TOTAL_PREMIUM", precision = 11, scale = 2)
+    private BigDecimal totalPremium = BigDecimal.ZERO;
+
+    @Column(name = "DEDUCTIBLE", precision = 9, scale = 2)
+    private BigDecimal deductible = BigDecimal.ZERO;
+
+    @Column(name = "COVERAGE_LIMIT", precision = 13, scale = 2)
+    private BigDecimal coverageLimit = BigDecimal.ZERO;
+
+    @Column(name = "INCEPTION_DATE")
+    private LocalDate inceptionDate;
+
+    @Column(name = "RENEWAL_COUNT")
+    private int renewalCount = 0;
+
+    @Column(name = "UW_STATUS", length = 2)
+    private String uwStatus = UW_PENDING;
+
+    @Column(name = "RISK_SCORE")
+    private int riskScore = 0;
+
+    @Column(name = "WEB_INDICATOR", length = 1)
+    private String webIndicator = "N";
+
+    @Column(name = "API_FLAG", length = 1)
+    private String apiFlag = "N";
+
+    @Column(name = "LAST_UPDATED", nullable = false)
+    private LocalDateTime lastUpdated;
+
+    @Column(name = "UPDATED_BY", length = 8, nullable = false)
+    private String updatedBy = "SYSTEM";
 
     public Policy() {
     }
@@ -61,19 +115,19 @@ public class Policy {
         this.policyStatus = policyStatus;
     }
 
-    public Date getEffectiveDate() {
+    public LocalDate getEffectiveDate() {
         return effectiveDate;
     }
 
-    public void setEffectiveDate(Date effectiveDate) {
+    public void setEffectiveDate(LocalDate effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
 
-    public Date getExpiryDate() {
+    public LocalDate getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(LocalDate expiryDate) {
         this.expiryDate = expiryDate;
     }
 
@@ -125,11 +179,11 @@ public class Policy {
         this.coverageLimit = coverageLimit;
     }
 
-    public Date getInceptionDate() {
+    public LocalDate getInceptionDate() {
         return inceptionDate;
     }
 
-    public void setInceptionDate(Date inceptionDate) {
+    public void setInceptionDate(LocalDate inceptionDate) {
         this.inceptionDate = inceptionDate;
     }
 
@@ -173,11 +227,11 @@ public class Policy {
         this.apiFlag = apiFlag;
     }
 
-    public Date getLastUpdated() {
+    public LocalDateTime getLastUpdated() {
         return lastUpdated;
     }
 
-    public void setLastUpdated(Date lastUpdated) {
+    public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
 

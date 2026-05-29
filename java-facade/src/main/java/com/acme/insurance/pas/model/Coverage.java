@@ -1,28 +1,66 @@
 package com.acme.insurance.pas.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
 
-/**
- * Coverage domain model.
- * Maps to ACMEINS.COVERAGES DB2 table on the mainframe.
- *
- * @author T. Nguyen (2022)
- */
+@Entity
+@Table(name = "COVERAGES", schema = "ACMEINS")
+@IdClass(CoverageId.class)
 public class Coverage {
 
+    public static final String TYPE_PROP = "PROP";
+    public static final String TYPE_LIAB = "LIAB";
+    public static final String TYPE_AUTP = "AUTP";
+    public static final String TYPE_AUTL = "AUTL";
+    public static final String TYPE_WKCP = "WKCP";
+    public static final String TYPE_UMBR = "UMBR";
+    public static final String TYPE_CYBR = "CYBR";
+    public static final String TYPE_TERR = "TERR";
+
+    @Id
+    @Column(name = "POLICY_NUMBER", length = 12, nullable = false)
     private String policyNumber;
+
+    @Id
+    @Column(name = "SEQUENCE_NUM", nullable = false)
     private int sequenceNum;
+
+    @Column(name = "COVERAGE_TYPE", length = 4, nullable = false)
     private String coverageType;
+
+    @Column(name = "DESCRIPTION", length = 40)
     private String description;
-    private BigDecimal coverageLimit;
-    private BigDecimal deductible;
-    private BigDecimal premium;
-    private Date effectiveDate;
-    private Date expiryDate;
-    private String status;
-    private int coinsurancePct;
+
+    @Column(name = "COVERAGE_LIMIT", precision = 13, scale = 2)
+    private BigDecimal coverageLimit = BigDecimal.ZERO;
+
+    @Column(name = "DEDUCTIBLE", precision = 9, scale = 2)
+    private BigDecimal deductible = BigDecimal.ZERO;
+
+    @Column(name = "PREMIUM", precision = 11, scale = 2)
+    private BigDecimal premium = BigDecimal.ZERO;
+
+    @Column(name = "EFFECTIVE_DATE", nullable = false)
+    private LocalDate effectiveDate;
+
+    @Column(name = "EXPIRY_DATE", nullable = false)
+    private LocalDate expiryDate;
+
+    @Column(name = "STATUS", length = 2, nullable = false)
+    private String status = "AC";
+
+    @Column(name = "COINSURANCE_PCT")
+    private int coinsurancePct = 100;
+
+    @Column(name = "RATING_TERRITORY", length = 6)
     private String ratingTerritory;
+
+    @Column(name = "CLASS_CODE", length = 5)
     private String classCode;
 
     public Coverage() {
@@ -84,19 +122,19 @@ public class Coverage {
         this.premium = premium;
     }
 
-    public Date getEffectiveDate() {
+    public LocalDate getEffectiveDate() {
         return effectiveDate;
     }
 
-    public void setEffectiveDate(Date effectiveDate) {
+    public void setEffectiveDate(LocalDate effectiveDate) {
         this.effectiveDate = effectiveDate;
     }
 
-    public Date getExpiryDate() {
+    public LocalDate getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Date expiryDate) {
+    public void setExpiryDate(LocalDate expiryDate) {
         this.expiryDate = expiryDate;
     }
 
