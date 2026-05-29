@@ -68,7 +68,7 @@ public class PolicyHolder {
     private String taxId;
 
     @Column(name = "CREDIT_SCORE")
-    private int creditScore;
+    private Integer creditScore;
 
     @Column(name = "RISK_TIER", length = 1)
     private String riskTier = RISK_TIER_STANDARD;
@@ -222,7 +222,7 @@ public class PolicyHolder {
     }
 
     public int getCreditScore() {
-        return creditScore;
+        return creditScore != null ? creditScore : 0;
     }
 
     public void setCreditScore(int creditScore) {

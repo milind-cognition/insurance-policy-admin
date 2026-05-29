@@ -135,7 +135,7 @@ public class PremiumCalculationService {
     private Map<String, BigDecimal> loadTerritoryFactors(LocalDate asOfDate) {
         Map<String, BigDecimal> factors = new HashMap<>();
         List<TerritoryFactor> tfList = territoryFactorRepository
-                .findByEffectiveDateLessThanEqual(asOfDate);
+                .findByEffectiveDateLessThanEqualOrderByTerritoryCodeAscEffectiveDateAsc(asOfDate);
         for (TerritoryFactor tf : tfList) {
             factors.put(tf.getTerritoryCode(), tf.getRatingFactor());
         }

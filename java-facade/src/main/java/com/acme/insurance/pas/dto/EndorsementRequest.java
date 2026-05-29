@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 
 public class EndorsementRequest {
 
-    @NotBlank
     private String policyNumber;
 
     @NotBlank

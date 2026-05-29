@@ -46,7 +46,7 @@ class PremiumCalculationServiceTest {
     }
 
     private void stubDefaultMocks() {
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
+        when(territoryFactorRepository.findByEffectiveDateLessThanEqualOrderByTerritoryCodeAscEffectiveDateAsc(any()))
                 .thenReturn(Collections.emptyList());
         when(coverageRepository.findByPolicyNumberOrderBySequenceNum(any()))
                 .thenReturn(Collections.emptyList());
@@ -187,7 +187,7 @@ class PremiumCalculationServiceTest {
     @Test
     void calculateAllPremiums_noPolicies_zeroCounters() {
         when(policyRepository.findByPolicyStatus("AC")).thenReturn(Collections.emptyList());
-        when(territoryFactorRepository.findByEffectiveDateLessThanEqual(any()))
+        when(territoryFactorRepository.findByEffectiveDateLessThanEqualOrderByTerritoryCodeAscEffectiveDateAsc(any()))
                 .thenReturn(Collections.emptyList());
 
         PremiumBatchSummary summary = service.calculateAllPremiums();

@@ -12,5 +12,5 @@ import java.util.List;
 public interface TerritoryFactorRepository
         extends JpaRepository<TerritoryFactor, TerritoryFactorId> {
 
-    List<TerritoryFactor> findByEffectiveDateLessThanEqual(LocalDate date);
+    List<TerritoryFactor> findByEffectiveDateLessThanEqualOrderByTerritoryCodeAscEffectiveDateAsc(LocalDate date);
 }

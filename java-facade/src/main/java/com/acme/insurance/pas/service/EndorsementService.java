@@ -87,7 +87,7 @@ public class EndorsementService {
                 policy.getEffectiveDate(), policy.getExpiryDate());
         long daysRemaining = ChronoUnit.DAYS.between(today, policy.getExpiryDate());
 
-        if (daysInTerm <= 0) {
+        if (daysInTerm <= 0 || daysRemaining <= 0) {
             return BigDecimal.ONE;
         }
         return BigDecimal.valueOf(daysRemaining)
