@@ -188,6 +188,38 @@ def _process_partition(
         engine.dispose()
 
 
+def _flush_batch(
+    conn: sa.Connection,
+    insert_sql: sa.TextClause,
+    batch: list[dict[str, Any]],
+    result: PartitionResult,
+    log: logging.Logger,
+    policy_type: str,
+) -> None:
+    """Try bulk INSERT; on failure, fall back to row-by-row for error isolation."""
+    try:
+        conn.execute(insert_sql, batch)
+        conn.commit()
+        result.policies_updated += len(batch)
+    except Exception:
+        conn.rollback()
+        log.warning(
+            "Batch insert failed for %s, falling back to row-by-row (%d rows)",
+            policy_type, len(batch),
+        )
+        for row_params in batch:
+            try:
+                conn.execute(insert_sql, row_params)
+                conn.commit()
+                result.policies_updated += 1
+            except Exception as row_exc:
+                conn.rollback()
+                result.policies_error += 1
+                result.errors.append(
+                    f"{row_params.get('policy_number', '?')}: {row_exc}"
+                )
+
+
 def _run_partition_with_engine(
     engine: Engine,
     policy_type: str,
@@ -259,27 +291,11 @@ def _run_partition_with_engine(
                 continue
 
             if len(batch) >= batch_size:
-                try:
-                    conn.execute(insert_sql, batch)
-                    conn.commit()
-                    result.policies_updated += len(batch)
-                except Exception as exc:
-                    conn.rollback()
-                    result.policies_error += len(batch)
-                    result.errors.append(f"Batch insert error: {exc}")
-                    log.error("Batch insert failed for %s: %s", policy_type, exc)
+                _flush_batch(conn, insert_sql, batch, result, log, policy_type)
                 batch = []
 
         if batch:
-            try:
-                conn.execute(insert_sql, batch)
-                conn.commit()
-                result.policies_updated += len(batch)
-            except Exception as exc:
-                conn.rollback()
-                result.policies_error += len(batch)
-                result.errors.append(f"Batch insert error: {exc}")
-                log.error("Final batch insert failed for %s: %s", policy_type, exc)
+            _flush_batch(conn, insert_sql, batch, result, log, policy_type)
 
     log.info(
         "Partition %s complete: read=%d updated=%d errors=%d",
