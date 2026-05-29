@@ -200,4 +200,15 @@ CREATE TABLE ACMEINS.TERRITORY_FACTORS (
         (TERRITORY_CODE, EFFECTIVE_DATE)
 ) IN ACMEDB.PASTS01;
 
+------------------------------------------------------------------------
+-- Class code rating factors (reference table)
+------------------------------------------------------------------------
+CREATE TABLE ACMEINS.CLASS_CODE_FACTORS (
+    CLASS_CODE          CHAR(5)         NOT NULL,
+    EFFECTIVE_DATE      DATE            NOT NULL,
+    RATING_FACTOR       DECIMAL(7,4)    NOT NULL,
+    CONSTRAINT PK_CLASS_FACTORS PRIMARY KEY
+        (CLASS_CODE, EFFECTIVE_DATE)
+) IN ACMEDB.PASTS01;
+
 COMMIT;
