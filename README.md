@@ -85,6 +85,39 @@ GET /manage/health                              - Health check
 
 The `java-batch/` module is a Spring Boot 3.3 / Spring Batch 5 application that replaces the COBOL `PREMBAT` batch program and `PREMIUM-BATCH.jcl` job.
 
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Spring Batch Job: premiumBatchJob               │
+│                                                                     │
+│  ┌──────────────┐    ┌───────────────────┐    ┌──────────────────┐  │
+│  │  ItemReader   │    │  ItemProcessor     │    │  ItemWriter      │  │
+│  │              │    │                   │    │                  │  │
+│  │  POLICIES    │    │  PremiumCalc-     │    │  INSERT INTO     │  │
+│  │  LEFT JOIN   ├───►│  ulationService   ├───►│  PREMIUMS        │  │
+│  │  COVERAGES   │    │                   │    │  (batch of 100)  │  │
+│  │              │    │  ┌─────────────┐  │    │                  │  │
+│  │  WHERE       │    │  │ base rate   │  │    └──────────────────┘  │
+│  │  STATUS='AC' │    │  │ (from yml)  │  │                         │
+│  └──────────────┘    │  ├─────────────┤  │    ┌──────────────────┐  │
+│                      │  │ territory   │  │    │  StepListener    │  │
+│  ┌──────────────┐    │  │ factor      │◄─┼────│                  │  │
+│  │ TERRITORY_   │    │  │ (from DB2)  │  │    │  PremiumReport-  │  │
+│  │ FACTORS      ├───►│  ├─────────────┤  │    │  Writer          │  │
+│  │              │    │  │ + tax 3.5%  │  │    │                  │  │
+│  └──────────────┘    │  │ + surcharge │  │    │  Logs summary:   │  │
+│                      │  │   $25.00    │  │    │  read / updated  │  │
+│  ┌──────────────┐    │  └─────────────┘  │    │  / errors        │  │
+│  │ application  │    │                   │    └──────────────────┘  │
+│  │ .yml         ├───►│  = finalPremium   │                         │
+│  │ (rates,tax)  │    │                   │                         │
+│  └──────────────┘    └───────────────────┘                         │
+│                                                                     │
+│  Chunks of 100 policies ──► multi-threaded (configurable)           │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ### Key improvements over the COBOL version
 
 1. **Externalized configuration** — base rates, tax rate, and surcharge are in `application.yml` instead of hardcoded in COBOL
