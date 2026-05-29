@@ -1,15 +1,20 @@
 package com.acme.insurance.pas.repository;
 
 import com.acme.insurance.pas.model.Coverage;
+import com.acme.insurance.pas.model.Customer;
 import com.acme.insurance.pas.model.Policy;
+import com.acme.insurance.pas.model.UnderwritingDecision;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Policy Repository - Direct JDBC access to DB2 on z/OS.
@@ -39,6 +44,39 @@ public class PolicyRepository {
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
 
+    private static final String FIND_CUSTOMER_SQL =
+            "SELECT CUST_ID, CUST_TYPE, LAST_NAME, FIRST_NAME, MIDDLE_INIT, " +
+            "COMPANY_NAME, ADDR_LINE1, ADDR_LINE2, CITY, STATE_CODE, " +
+            "ZIP_CODE, COUNTRY_CODE, PHONE, EMAIL, DATE_OF_BIRTH, " +
+            "SSN_LAST4, TAX_ID, CREDIT_SCORE, RISK_TIER, GDPR_CONSENT, " +
+            "CREATED_DATE, LAST_UPDATED " +
+            "FROM ACMEINS.POLICY_HOLDERS WHERE CUST_ID = ?";
+
+    private static final String CLAIM_HISTORY_SQL =
+            "SELECT COUNT(*) AS CLAIM_COUNT, " +
+            "COALESCE(SUM(INCURRED_AMOUNT), 0) AS TOTAL_INCURRED " +
+            "FROM ACMEINS.CLAIMS " +
+            "WHERE POLICY_NUMBER = ? " +
+            "AND CLAIM_DATE >= DATEADD('YEAR', -5, CURRENT_DATE)";
+
+    private static final String ACCUMULATED_LIMIT_SQL =
+            "SELECT COALESCE(SUM(COVERAGE_LIMIT), 0) AS ACCUM_LIMIT " +
+            "FROM ACMEINS.POLICIES " +
+            "WHERE BRANCH_CODE = ? AND POLICY_STATUS = 'AC'";
+
+    private static final String MERGE_UW_DECISION_SQL =
+            "MERGE INTO ACMEINS.UNDERWRITING_DECISIONS " +
+            "(POLICY_NUMBER, DECISION_DATE, DECISION_CODE, RISK_SCORE, " +
+            "DECISION_REASON, UNDERWRITER_ID, CREATED_TIMESTAMP) " +
+            "KEY (POLICY_NUMBER, DECISION_DATE) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+    private static final String UPDATE_POLICY_UW_SQL =
+            "UPDATE ACMEINS.POLICIES " +
+            "SET UW_STATUS = ?, RISK_SCORE = ?, " +
+            "LAST_UPDATED = CURRENT_TIMESTAMP, UPDATED_BY = 'UNDWRT' " +
+            "WHERE POLICY_NUMBER = ?";
+
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
             "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, " +
@@ -64,6 +102,90 @@ public class PolicyRepository {
                 FIND_COVERAGES_SQL,
                 new Object[]{policyNumber},
                 new CoverageRowMapper());
+    }
+
+    public Customer findCustomerById(String custId) {
+        List<Customer> results = jdbcTemplate.query(
+                FIND_CUSTOMER_SQL,
+                new Object[]{custId},
+                new CustomerRowMapper());
+        if (results.isEmpty()) {
+            return null;
+        }
+        return results.get(0);
+    }
+
+    public Map<String, Object> getClaimHistory(String policyNumber) {
+        return jdbcTemplate.queryForMap(CLAIM_HISTORY_SQL,
+                new Object[]{policyNumber});
+    }
+
+    public BigDecimal getAccumulatedLimit(String branchCode) {
+        return jdbcTemplate.queryForObject(ACCUMULATED_LIMIT_SQL,
+                new Object[]{branchCode}, BigDecimal.class);
+    }
+
+    public void insertUnderwritingDecision(UnderwritingDecision decision) {
+        jdbcTemplate.update(MERGE_UW_DECISION_SQL,
+                decision.getPolicyNumber(),
+                decision.getDecisionDate(),
+                decision.getDecisionCode(),
+                decision.getRiskScore(),
+                decision.getDecisionReason(),
+                decision.getUnderwriterId(),
+                decision.getCreatedTimestamp());
+    }
+
+    public void updatePolicyUnderwriting(String policyNumber,
+            String uwStatus, int riskScore) {
+        jdbcTemplate.update(UPDATE_POLICY_UW_SQL,
+                uwStatus, riskScore, policyNumber);
+    }
+
+    private static class CustomerRowMapper implements RowMapper<Customer> {
+        @Override
+        public Customer mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Customer customer = new Customer();
+            customer.setCustId(rs.getString("CUST_ID").trim());
+            customer.setCustType(rs.getString("CUST_TYPE").trim());
+            customer.setLastName(rs.getString("LAST_NAME") != null ?
+                    rs.getString("LAST_NAME").trim() : null);
+            customer.setFirstName(rs.getString("FIRST_NAME") != null ?
+                    rs.getString("FIRST_NAME").trim() : null);
+            customer.setMiddleInit(rs.getString("MIDDLE_INIT") != null ?
+                    rs.getString("MIDDLE_INIT").trim() : null);
+            customer.setCompanyName(rs.getString("COMPANY_NAME") != null ?
+                    rs.getString("COMPANY_NAME").trim() : null);
+            customer.setAddrLine1(rs.getString("ADDR_LINE1") != null ?
+                    rs.getString("ADDR_LINE1").trim() : null);
+            customer.setAddrLine2(rs.getString("ADDR_LINE2") != null ?
+                    rs.getString("ADDR_LINE2").trim() : null);
+            customer.setCity(rs.getString("CITY") != null ?
+                    rs.getString("CITY").trim() : null);
+            customer.setStateCode(rs.getString("STATE_CODE") != null ?
+                    rs.getString("STATE_CODE").trim() : null);
+            customer.setZipCode(rs.getString("ZIP_CODE") != null ?
+                    rs.getString("ZIP_CODE").trim() : null);
+            customer.setCountryCode(rs.getString("COUNTRY_CODE") != null ?
+                    rs.getString("COUNTRY_CODE").trim() : null);
+            customer.setPhone(rs.getString("PHONE") != null ?
+                    rs.getString("PHONE").trim() : null);
+            customer.setEmail(rs.getString("EMAIL") != null ?
+                    rs.getString("EMAIL").trim() : null);
+            customer.setDateOfBirth(rs.getDate("DATE_OF_BIRTH"));
+            customer.setSsnLast4(rs.getString("SSN_LAST4") != null ?
+                    rs.getString("SSN_LAST4").trim() : null);
+            customer.setTaxId(rs.getString("TAX_ID") != null ?
+                    rs.getString("TAX_ID").trim() : null);
+            customer.setCreditScore(rs.getInt("CREDIT_SCORE"));
+            customer.setRiskTier(rs.getString("RISK_TIER") != null ?
+                    rs.getString("RISK_TIER").trim() : null);
+            customer.setGdprConsent(rs.getString("GDPR_CONSENT") != null ?
+                    rs.getString("GDPR_CONSENT").trim() : null);
+            customer.setCreatedDate(rs.getDate("CREATED_DATE"));
+            customer.setLastUpdated(rs.getTimestamp("LAST_UPDATED"));
+            return customer;
+        }
     }
 
     private static class PolicyRowMapper implements RowMapper<Policy> {
