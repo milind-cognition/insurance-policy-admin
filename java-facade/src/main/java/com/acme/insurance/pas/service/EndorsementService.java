@@ -110,12 +110,12 @@ public class EndorsementService {
         long daysInTerm = ChronoUnit.DAYS.between(effectiveDate, expiryDate);
         long daysRemaining = ChronoUnit.DAYS.between(currentDate, expiryDate);
 
-        if (daysInTerm <= 0) {
-            return BigDecimal.ONE;
-        }
-
         if (daysRemaining <= 0) {
             throw new IllegalArgumentException("POLICY TERM HAS EXPIRED - ENDORSEMENT NOT ALLOWED");
+        }
+
+        if (daysInTerm <= 0) {
+            return BigDecimal.ONE;
         }
 
         return BigDecimal.valueOf(daysRemaining)
