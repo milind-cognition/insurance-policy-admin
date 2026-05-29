@@ -6,6 +6,7 @@ import com.acme.insurance.pas.model.UnderwritingResponse;
 import com.acme.insurance.pas.repository.PolicyRepository;
 import com.acme.insurance.pas.service.UnderwritingService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -80,6 +81,9 @@ public class PolicyController {
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<UnderwritingResponse>(
                     HttpStatus.BAD_REQUEST);
+        } catch (DuplicateKeyException e) {
+            return new ResponseEntity<UnderwritingResponse>(
+                    HttpStatus.CONFLICT);
         }
     }
 }
