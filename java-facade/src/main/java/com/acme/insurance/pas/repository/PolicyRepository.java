@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -39,6 +40,18 @@ public class PolicyRepository {
             "FROM ACMEINS.POLICIES " +
             "WHERE POLICY_NUMBER = ?";
 
+    private static final String UPDATE_POLICY_RENEWAL_SQL =
+            "UPDATE ACMEINS.POLICIES SET " +
+            "POLICY_STATUS = ?, EFFECTIVE_DATE = ?, EXPIRY_DATE = ?, " +
+            "TOTAL_PREMIUM = ?, RENEWAL_COUNT = ?, UW_STATUS = ?, " +
+            "LAST_UPDATED = CURRENT_TIMESTAMP, UPDATED_BY = 'POLRNW' " +
+            "WHERE POLICY_NUMBER = ?";
+
+    private static final String UPDATE_COVERAGE_DATES_SQL =
+            "UPDATE ACMEINS.COVERAGES SET " +
+            "EFFECTIVE_DATE = ?, EXPIRY_DATE = ? " +
+            "WHERE POLICY_NUMBER = ? AND STATUS = 'AC'";
+
     private static final String FIND_COVERAGES_SQL =
             "SELECT POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
             "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, " +
@@ -64,6 +77,24 @@ public class PolicyRepository {
                 FIND_COVERAGES_SQL,
                 new Object[]{policyNumber},
                 new CoverageRowMapper());
+    }
+
+    public void updatePolicyForRenewal(Policy policy) {
+        jdbcTemplate.update(UPDATE_POLICY_RENEWAL_SQL,
+                policy.getPolicyStatus(),
+                new java.sql.Date(policy.getEffectiveDate().getTime()),
+                new java.sql.Date(policy.getExpiryDate().getTime()),
+                policy.getTotalPremium(),
+                policy.getRenewalCount(),
+                policy.getUwStatus(),
+                policy.getPolicyNumber());
+    }
+
+    public void updateCoverageDates(String policyNumber, Date effectiveDate, Date expiryDate) {
+        jdbcTemplate.update(UPDATE_COVERAGE_DATES_SQL,
+                new java.sql.Date(effectiveDate.getTime()),
+                new java.sql.Date(expiryDate.getTime()),
+                policyNumber);
     }
 
     private static class PolicyRowMapper implements RowMapper<Policy> {
