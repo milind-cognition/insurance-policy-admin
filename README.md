@@ -53,6 +53,7 @@ The Policy Administration System is the **core insurance platform** for Acme Ins
 ```
 GET /api/v1/policies/{policyNumber}            - Policy details (JSON)
 GET /api/v1/policies/{policyNumber}/coverages   - Coverage list (JSON)
+GET /api/v1/policies/{policyNumber}/inquiry     - Full policy inquiry (POLQRY)
 GET /manage/health                              - Health check
 ```
 
@@ -74,6 +75,14 @@ GET /manage/health                              - Health check
 5. **Java facade has no authentication** - Relies on network segmentation (internal VPN only)
 6. **Single-threaded batch** - PREMBAT processes policies sequentially; takes ~4 hours for full book
 7. **FTP file transfer** - No encryption on daily extract files (regulatory risk)
+
+## COBOL-to-Java Migration Docs
+
+Detailed documentation for each migrated COBOL program lives in [`docs/migrations/`](docs/migrations/):
+
+| Program | Doc | Description |
+|---------|-----|-------------|
+| POLQRY | [POLQRY.md](docs/migrations/POLQRY.md) | Policy inquiry — data flow, COBOL paragraph mapping, PII restrictions |
 
 ## Source Control
 
