@@ -44,12 +44,18 @@ public class NewPolicyService {
         // 4000-GENERATE-POLICY-NUM
         String policyNumber = policyRepository.generatePolicyNumber();
 
+        // Compute effective/expiry dates once so the policy and its coverages share identical values
+        Date effectiveDate = isPresent(request.getEffectiveDate()) ?
+                parseDate(request.getEffectiveDate()) : new Date();
+        Date expiryDate = isPresent(request.getExpiryDate()) ?
+                parseDate(request.getExpiryDate()) : addOneYear(effectiveDate);
+
         // 5000-INSERT-POLICY
-        Policy policy = buildPolicy(policyNumber, request);
+        Policy policy = buildPolicy(policyNumber, request, effectiveDate, expiryDate);
         policyRepository.insertPolicy(policy);
 
         // 6000-INSERT-COVERAGES
-        int coveragesCreated = insertDefaultCoverages(policyNumber, request);
+        int coveragesCreated = insertDefaultCoverages(policyNumber, request, effectiveDate, expiryDate);
 
         // 7000-SEND-MQ-MESSAGE (skipped in Java — MQ underwriting referral)
         log.info("POLNEW: Skipping MQ underwriting referral for policy {}", policyNumber);
@@ -85,15 +91,13 @@ public class NewPolicyService {
         }
     }
 
-    private Policy buildPolicy(String policyNumber, NewPolicyRequest request) {
+    private Policy buildPolicy(String policyNumber, NewPolicyRequest request, Date effectiveDate, Date expiryDate) {
         Policy policy = new Policy();
         policy.setPolicyNumber(policyNumber);
         policy.setPolicyType(request.getPolicyType().toUpperCase());
         policy.setPolicyStatus("PN");
-        policy.setEffectiveDate(isPresent(request.getEffectiveDate()) ?
-                parseDate(request.getEffectiveDate()) : new Date());
-        policy.setExpiryDate(isPresent(request.getExpiryDate()) ?
-                parseDate(request.getExpiryDate()) : addOneYear(policy.getEffectiveDate()));
+        policy.setEffectiveDate(effectiveDate);
+        policy.setExpiryDate(expiryDate);
         policy.setPolicyholderId(request.getPolicyholderId());
         policy.setAgentCode(request.getAgentCode());
         policy.setBranchCode(request.getBranchCode());
@@ -102,7 +106,7 @@ public class NewPolicyService {
         policy.setDeductible(request.getDeductible() != null ?
                 request.getDeductible() : BigDecimal.ZERO);
         policy.setCoverageLimit(request.getCoverageLimit());
-        policy.setInceptionDate(policy.getEffectiveDate());
+        policy.setInceptionDate(effectiveDate);
         policy.setRenewalCount(0);
         policy.setUwStatus("PN");
         policy.setRiskScore(0);
@@ -112,12 +116,8 @@ public class NewPolicyService {
         return policy;
     }
 
-    private int insertDefaultCoverages(String policyNumber, NewPolicyRequest request) {
+    private int insertDefaultCoverages(String policyNumber, NewPolicyRequest request, Date effDate, Date expDate) {
         String policyType = request.getPolicyType().toUpperCase();
-        Date effDate = isPresent(request.getEffectiveDate()) ?
-                parseDate(request.getEffectiveDate()) : new Date();
-        Date expDate = isPresent(request.getExpiryDate()) ?
-                parseDate(request.getExpiryDate()) : addOneYear(effDate);
 
         int count = 0;
         if ("AUT".equals(policyType)) {
