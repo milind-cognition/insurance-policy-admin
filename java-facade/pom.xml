@@ -27,6 +27,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+        <!-- REST Assured 4.5 requires Groovy 3; override the Spring Boot 1.5 BOM
+             default (Groovy 2.4) which is only used by the test-scoped API suite. -->
+        <groovy.version>3.0.9</groovy.version>
     </properties>
 
     <dependencies>
@@ -68,6 +71,22 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- TestNG: drives the REST API integration suite (parallel-capable). -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>7.5</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- REST Assured: fluent HTTP assertions against the running facade. -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>4.5.1</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- H2 in-memory database for local development and testing -->
         <dependency>
             <groupId>com.h2database</groupId>
@@ -81,6 +100,39 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Boot the facade (H2 'local' profile) around the integration tests
+                     so `mvn verify` is self-contained for CI. -->
+                <executions>
+                    <execution>
+                        <id>pre-integration-test</id>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                        <configuration>
+                            <jvmArguments>-Dspring.profiles.active=local</jvmArguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>post-integration-test</id>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Failsafe runs the *IT TestNG integration tests during `verify`. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
