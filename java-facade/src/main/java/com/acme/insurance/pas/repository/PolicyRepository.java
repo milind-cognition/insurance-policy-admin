@@ -29,6 +29,24 @@ public class PolicyRepository {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    private static final String FIND_CUSTOMER_EXISTS_SQL =
+            "SELECT CUST_ID FROM ACMEINS.POLICY_HOLDERS WHERE CUST_ID = ?";
+
+    private static final String INSERT_POLICY_SQL =
+            "INSERT INTO ACMEINS.POLICIES (POLICY_NUMBER, POLICY_TYPE, POLICY_STATUS, " +
+            "EFFECTIVE_DATE, EXPIRY_DATE, POLICYHOLDER_ID, AGENT_CODE, BRANCH_CODE, " +
+            "TOTAL_PREMIUM, DEDUCTIBLE, COVERAGE_LIMIT, INCEPTION_DATE, RENEWAL_COUNT, " +
+            "UW_STATUS, RISK_SCORE, WEB_INDICATOR, API_FLAG, LAST_UPDATED, UPDATED_BY) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)";
+
+    private static final String INSERT_COVERAGE_SQL =
+            "INSERT INTO ACMEINS.COVERAGES (POLICY_NUMBER, SEQUENCE_NUM, COVERAGE_TYPE, " +
+            "DESCRIPTION, COVERAGE_LIMIT, DEDUCTIBLE, PREMIUM, EFFECTIVE_DATE, EXPIRY_DATE, " +
+            "STATUS) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    private static final String NEXT_POLICY_SEQ_SQL =
+            "SELECT NEXT VALUE FOR ACMEINS.POLICY_SEQ FROM (VALUES(0))";
+
     private static final String FIND_POLICY_SQL =
             "SELECT POLICY_NUMBER, POLICY_TYPE, POLICY_STATUS, " +
             "EFFECTIVE_DATE, EXPIRY_DATE, POLICYHOLDER_ID, " +
@@ -64,6 +82,60 @@ public class PolicyRepository {
                 FIND_COVERAGES_SQL,
                 new Object[]{policyNumber},
                 new CoverageRowMapper());
+    }
+
+    public boolean customerExists(String custId) {
+        List<String> results = jdbcTemplate.query(
+                FIND_CUSTOMER_EXISTS_SQL,
+                new Object[]{custId},
+                new RowMapper<String>() {
+                    @Override
+                    public String mapRow(ResultSet rs, int rowNum) throws SQLException {
+                        return rs.getString("CUST_ID");
+                    }
+                });
+        return !results.isEmpty();
+    }
+
+    public String generatePolicyNumber() {
+        Long seq = jdbcTemplate.queryForObject(NEXT_POLICY_SEQ_SQL, Long.class);
+        return String.format("POL-%08d", seq);
+    }
+
+    public void insertPolicy(Policy policy) {
+        jdbcTemplate.update(INSERT_POLICY_SQL,
+                policy.getPolicyNumber(),
+                policy.getPolicyType(),
+                policy.getPolicyStatus(),
+                policy.getEffectiveDate(),
+                policy.getExpiryDate(),
+                policy.getPolicyholderId(),
+                policy.getAgentCode(),
+                policy.getBranchCode(),
+                policy.getTotalPremium(),
+                policy.getDeductible(),
+                policy.getCoverageLimit(),
+                policy.getInceptionDate(),
+                policy.getRenewalCount(),
+                policy.getUwStatus(),
+                policy.getRiskScore(),
+                policy.getWebIndicator(),
+                policy.getApiFlag(),
+                policy.getUpdatedBy());
+    }
+
+    public void insertCoverage(Coverage coverage) {
+        jdbcTemplate.update(INSERT_COVERAGE_SQL,
+                coverage.getPolicyNumber(),
+                coverage.getSequenceNum(),
+                coverage.getCoverageType(),
+                coverage.getDescription(),
+                coverage.getCoverageLimit(),
+                coverage.getDeductible(),
+                coverage.getPremium(),
+                coverage.getEffectiveDate(),
+                coverage.getExpiryDate(),
+                coverage.getStatus());
     }
 
     private static class PolicyRowMapper implements RowMapper<Policy> {
