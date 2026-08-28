@@ -3,7 +3,6 @@ package com.acme.dropin.contract;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 /**
  * The policy resource exactly as the incumbent facade serializes it.
@@ -22,15 +21,15 @@ public record PolicyView(
         String policyNumber,
         String policyType,
         String policyStatus,
-        LocalDate effectiveDate,
-        LocalDate expiryDate,
+        PasDate effectiveDate,
+        PasDate expiryDate,
         String policyholderId,
         String agentCode,
         String branchCode,
         BigDecimal totalPremium,
         BigDecimal deductible,
         BigDecimal coverageLimit,
-        LocalDate inceptionDate,
+        PasDate inceptionDate,
         int renewalCount,
         String uwStatus,
         int riskScore,
@@ -52,7 +51,7 @@ public record PolicyView(
                 lastUpdated, updatedBy);
     }
 
-    public PolicyView renewedTo(LocalDate newEffective, LocalDate newExpiry, BigDecimal premium,
+    public PolicyView renewedTo(PasDate newEffective, PasDate newExpiry, BigDecimal premium,
                                 int renewals, String status, String underwritingStatus) {
         return new PolicyView(policyNumber, policyType, status, newEffective, newExpiry,
                 policyholderId, agentCode, branchCode, premium, deductible, coverageLimit,

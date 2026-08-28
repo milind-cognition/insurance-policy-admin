@@ -2,8 +2,6 @@ package com.acme.dropin.contract;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 /**
@@ -19,8 +17,6 @@ import java.util.Arrays;
  * concern and is called out in CONTRACT.md rather than papered over.
  */
 public final class CommareaCodec {
-
-    private static final DateTimeFormatter YYYYMMDD = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final Copybook copybook;
 
@@ -92,14 +88,14 @@ public final class CommareaCodec {
         return Long.parseLong(new String(image, f.offset(), f.length(), StandardCharsets.US_ASCII));
     }
 
-    /** {@code PIC 9(08)} date field holding YYYYMMDD. */
-    public void putDate(byte[] image, String field, LocalDate date) {
-        putInteger(image, field, date == null ? 0 : Long.parseLong(date.format(YYYYMMDD)));
+    /** {@code PIC 9(08)} date field holding YYYYMMDD, valid calendar date or not. */
+    public void putDate(byte[] image, String field, PasDate date) {
+        putInteger(image, field, date == null ? 0 : date.yyyymmdd());
     }
 
-    public LocalDate getDate(byte[] image, String field) {
+    public PasDate getDate(byte[] image, String field) {
         long value = getInteger(image, field);
-        return value == 0 ? null : LocalDate.parse(String.format("%08d", value), YYYYMMDD);
+        return value == 0 ? null : PasDate.of((int) value);
     }
 
     /** {@code COMP-3} packed decimal, scale taken from the copybook's V clause. */

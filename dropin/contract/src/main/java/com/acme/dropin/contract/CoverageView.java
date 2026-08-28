@@ -3,7 +3,6 @@ package com.acme.dropin.contract;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
 /** The coverage resource exactly as the incumbent facade serializes it. */
 @JsonPropertyOrder({
@@ -18,8 +17,8 @@ public record CoverageView(
         BigDecimal coverageLimit,
         BigDecimal deductible,
         BigDecimal premium,
-        LocalDate effectiveDate,
-        LocalDate expiryDate,
+        PasDate effectiveDate,
+        PasDate expiryDate,
         String status,
         int coinsurancePct,
         String ratingTerritory,
@@ -31,7 +30,7 @@ public record CoverageView(
         premium = Money.pin(premium);
     }
 
-    public CoverageView withTerm(LocalDate newEffective, LocalDate newExpiry) {
+    public CoverageView withTerm(PasDate newEffective, PasDate newExpiry) {
         return new CoverageView(policyNumber, sequenceNum, coverageType, description,
                 coverageLimit, deductible, premium, newEffective, newExpiry, status,
                 coinsurancePct, ratingTerritory, classCode);

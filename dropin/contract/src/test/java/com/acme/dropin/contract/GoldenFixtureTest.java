@@ -3,7 +3,6 @@ package com.acme.dropin.contract;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,7 +39,7 @@ class GoldenFixtureTest {
     void capturedValuesAreTheOnesTheDemoTalksAbout() {
         PolicyView policy = GoldenFixtures.policy("POL-00000001");
         assertEquals(new BigDecimal("1250.00"), policy.totalPremium());
-        assertEquals(LocalDate.of(2026, 1, 1), policy.expiryDate());
+        assertEquals(PasDate.of(2026, 1, 1), policy.expiryDate());
         assertEquals(2, GoldenFixtures.coverages("POL-00000001").size());
     }
 

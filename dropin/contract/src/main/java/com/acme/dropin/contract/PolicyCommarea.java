@@ -1,7 +1,6 @@
 package com.acme.dropin.contract;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.ZoneOffset;
 
 /**
@@ -55,7 +54,7 @@ public final class PolicyCommarea {
     }
 
     public static PolicyView decode(byte[] image) {
-        LocalDate lastUpdated = CODEC.getDate(image, "POLICY-LAST-UPDATED");
+        PasDate lastUpdated = CODEC.getDate(image, "POLICY-LAST-UPDATED");
         return new PolicyView(
                 CODEC.getTrimmedText(image, "POLICY-NUMBER"),
                 CODEC.getTrimmedText(image, "POLICY-TYPE"),
@@ -74,11 +73,13 @@ public final class PolicyCommarea {
                 (int) CODEC.getInteger(image, "POLICY-RISK-SCORE"),
                 CODEC.getTrimmedText(image, "POLICY-WEB-IND"),
                 CODEC.getTrimmedText(image, "POLICY-API-FLAG"),
-                lastUpdated == null ? 0L : lastUpdated.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                lastUpdated == null ? 0L
+                        : lastUpdated.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
                 CODEC.getTrimmedText(image, "POLICY-UPDATED-BY"));
     }
 
-    private static LocalDate asDate(long epochMillis) {
-        return epochMillis == 0 ? null : Instant.ofEpochMilli(epochMillis).atZone(ZoneOffset.UTC).toLocalDate();
+    private static PasDate asDate(long epochMillis) {
+        return epochMillis == 0 ? null
+                : PasDate.of(Instant.ofEpochMilli(epochMillis).atZone(ZoneOffset.UTC).toLocalDate());
     }
 }
