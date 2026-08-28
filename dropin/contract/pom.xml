@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.acme.dropin</groupId>
+        <artifactId>dropin-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>pas-contract</artifactId>
+    <name>PAS caller-visible contract</name>
+    <description>
+        The contract a caller of the Policy Administration System is entitled to depend on,
+        expressed as executable code: COMMAREA layouts parsed from the real copybooks and an
+        OpenAPI 3 document generated from the existing java-facade controller.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                The copybooks are the source of truth for the COMMAREA layout and stay
+                where the COBOL compiler expects them. They are copied into this jar at
+                build time so the layout ships with the contract and is never transcribed.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-copybooks</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/copybooks</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}/../../cobol/copybooks</directory>
+                                    <includes>
+                                        <include>*.cpy</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

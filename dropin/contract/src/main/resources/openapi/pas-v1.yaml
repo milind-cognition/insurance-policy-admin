@@ -1,0 +1,317 @@
+# GENERATED FILE - do not edit by hand.
+# Produced by com.acme.dropin.contract.OpenApiGenerator from:
+#   java-facade/src/main/java/com/acme/insurance/pas/controller/PolicyController.java
+#   java-facade/src/main/java/com/acme/insurance/pas/model/{Policy,Coverage}.java
+#   java-facade/src/main/java/com/acme/insurance/pas/repository/PolicyRepository.java
+#   cobol/copybooks/{POLICY-RECORD,COVERAGE-RECORD}.cpy
+# Regenerate with: mvn -pl contract exec:java -Dexec.mainClass=com.acme.dropin.contract.OpenApiGenerator
+openapi: 3.0.3
+info:
+  title: Policy Administration System - caller-visible service contract
+  version: 1.0.0
+  description: >-
+    The service boundary that .NET and Java callers integrate against. Requests and
+    responses are carried as JSON here and as the equivalent XML documents over CICS
+    Web Services; both projections describe the same fields in the same order. The
+    COMMAREA layouts documented under x-cics-commarea are the layer underneath this
+    boundary, not the boundary itself.
+servers:
+  - url: http://localhost:8080
+    description: Local demo, either backend (pas.backend=mainframe|mirror)
+paths:
+  /api/v1/policies/{policyNumber}:
+    get:
+      operationId: getPolicy
+      x-cics-transaction: PQRY
+      x-cics-program: POLQRY
+      parameters:
+        - name: policyNumber
+          in: path
+          required: true
+          description: Policy number, PIC X(12) on the COMMAREA (space padded there, trimmed here)
+          schema:
+            type: string
+            maxLength: 12
+      responses:
+        '200':
+          description: Policy found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Policy'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Policy'
+        '404':
+          description: >-
+            No policy with that number. Empty body. Corresponds to DB2
+            SQLCODE 100 and to the 'POLICY NOT FOUND' path in POLQRY.cbl.
+  /api/v1/policies/{policyNumber}/coverages:
+    get:
+      operationId: getCoverages
+      x-cics-transaction: PQRY
+      x-cics-program: POLQRY
+      parameters:
+        - name: policyNumber
+          in: path
+          required: true
+          description: Policy number, PIC X(12) on the COMMAREA (space padded there, trimmed here)
+          schema:
+            type: string
+            maxLength: 12
+      responses:
+        '200':
+          description: Coverages for the policy, ordered by SEQUENCE_NUM as POLQRY reads them
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoverageList'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/CoverageList'
+        '404':
+          description: >-
+            No policy with that number. Empty body. Corresponds to DB2
+            SQLCODE 100 and to the 'POLICY NOT FOUND' path in POLQRY.cbl.
+components:
+  schemas:
+    CoverageList:
+      type: array
+      xml:
+        name: coverages
+        wrapped: true
+      items:
+        $ref: '#/components/schemas/Coverage'
+    Policy:
+      type: object
+      xml:
+        name: policy
+      x-cics-commarea:
+        copybook: cobol/copybooks/POLICY-RECORD.cpy
+        record: POLICY-RECORD
+        length: 125
+      properties:
+        policyNumber:
+          type: string
+          x-cobol-field: POLICY-NUMBER
+          x-cobol-picture: PIC X(12)
+          x-cobol-offset: 0
+          x-cobol-length: 12
+        policyType:
+          type: string
+          x-cobol-field: POLICY-TYPE
+          x-cobol-picture: PIC X(03)
+          x-cobol-offset: 12
+          x-cobol-length: 3
+        policyStatus:
+          type: string
+          x-cobol-field: POLICY-STATUS
+          x-cobol-picture: PIC X(02)
+          x-cobol-offset: 15
+          x-cobol-length: 2
+        effectiveDate:
+          type: string
+          format: date
+          x-cobol-field: POLICY-EFFECTIVE-DATE
+          x-cobol-picture: PIC 9(08)
+          x-cobol-offset: 17
+          x-cobol-length: 8
+        expiryDate:
+          type: string
+          format: date
+          x-cobol-field: POLICY-EXPIRY-DATE
+          x-cobol-picture: PIC 9(08)
+          x-cobol-offset: 25
+          x-cobol-length: 8
+        policyholderId:
+          type: string
+          x-cobol-field: POLICY-HOLDER-ID
+          x-cobol-picture: PIC X(10)
+          x-cobol-offset: 33
+          x-cobol-length: 10
+        agentCode:
+          type: string
+          x-cobol-field: POLICY-AGENT-CODE
+          x-cobol-picture: PIC X(06)
+          x-cobol-offset: 43
+          x-cobol-length: 6
+        branchCode:
+          type: string
+          x-cobol-field: POLICY-BRANCH-CODE
+          x-cobol-picture: PIC X(04)
+          x-cobol-offset: 49
+          x-cobol-length: 4
+        totalPremium:
+          type: number
+          format: decimal
+          x-decimal-scale: 2
+          x-cobol-field: POLICY-TOTAL-PREMIUM
+          x-cobol-picture: PIC S9(09)V99 COMP-3
+          x-cobol-offset: 53
+          x-cobol-length: 6
+        deductible:
+          type: number
+          format: decimal
+          x-decimal-scale: 2
+          x-cobol-field: POLICY-DEDUCTIBLE
+          x-cobol-picture: PIC S9(07)V99 COMP-3
+          x-cobol-offset: 59
+          x-cobol-length: 5
+        coverageLimit:
+          type: number
+          format: decimal
+          x-decimal-scale: 2
+          x-cobol-field: POLICY-LIMIT
+          x-cobol-picture: PIC S9(11)V99 COMP-3
+          x-cobol-offset: 64
+          x-cobol-length: 7
+        inceptionDate:
+          type: string
+          format: date
+          x-cobol-field: POLICY-INCEPTION-DATE
+          x-cobol-picture: PIC 9(08)
+          x-cobol-offset: 71
+          x-cobol-length: 8
+        renewalCount:
+          type: integer
+          format: int32
+          x-cobol-field: POLICY-RENEWAL-COUNT
+          x-cobol-picture: PIC 9(03)
+          x-cobol-offset: 79
+          x-cobol-length: 3
+        uwStatus:
+          type: string
+          x-cobol-field: POLICY-UW-STATUS
+          x-cobol-picture: PIC X(02)
+          x-cobol-offset: 82
+          x-cobol-length: 2
+        riskScore:
+          type: integer
+          format: int32
+          x-cobol-field: POLICY-RISK-SCORE
+          x-cobol-picture: PIC 9(03)
+          x-cobol-offset: 84
+          x-cobol-length: 3
+        webIndicator:
+          type: string
+          x-cobol-field: POLICY-WEB-IND
+          x-cobol-picture: PIC X(01)
+          x-cobol-offset: 87
+          x-cobol-length: 1
+        apiFlag:
+          type: string
+          x-cobol-field: POLICY-API-FLAG
+          x-cobol-picture: PIC X(01)
+          x-cobol-offset: 88
+          x-cobol-length: 1
+        lastUpdated:
+          type: integer
+          format: int64
+          description: Epoch milliseconds; the facade maps this column with rs.getTimestamp
+          x-cobol-field: POLICY-LAST-UPDATED
+          x-cobol-picture: PIC 9(08)
+          x-cobol-offset: 89
+          x-cobol-length: 8
+        updatedBy:
+          type: string
+          x-cobol-field: POLICY-UPDATED-BY
+          x-cobol-picture: PIC X(08)
+          x-cobol-offset: 97
+          x-cobol-length: 8
+    Coverage:
+      type: object
+      xml:
+        name: coverage
+      x-cics-commarea:
+        copybook: cobol/copybooks/COVERAGE-RECORD.cpy
+        record: COVERAGE-RECORD
+        length: 124
+      properties:
+        policyNumber:
+          type: string
+          x-cobol-field: COV-POLICY-NUMBER
+          x-cobol-picture: PIC X(12)
+          x-cobol-offset: 0
+          x-cobol-length: 12
+        sequenceNum:
+          type: integer
+          format: int32
+          x-cobol-field: COV-SEQUENCE-NUM
+          x-cobol-picture: PIC 9(03)
+          x-cobol-offset: 12
+          x-cobol-length: 3
+        coverageType:
+          type: string
+          x-cobol-field: COV-TYPE-CODE
+          x-cobol-picture: PIC X(04)
+          x-cobol-offset: 15
+          x-cobol-length: 4
+        description:
+          type: string
+          x-cobol-field: COV-DESCRIPTION
+          x-cobol-picture: PIC X(40)
+          x-cobol-offset: 19
+          x-cobol-length: 40
+        coverageLimit:
+          type: number
+          format: decimal
+          x-decimal-scale: 2
+          x-cobol-field: COV-LIMIT
+          x-cobol-picture: PIC S9(11)V99 COMP-3
+          x-cobol-offset: 59
+          x-cobol-length: 7
+        deductible:
+          type: number
+          format: decimal
+          x-decimal-scale: 2
+          x-cobol-field: COV-DEDUCTIBLE
+          x-cobol-picture: PIC S9(07)V99 COMP-3
+          x-cobol-offset: 66
+          x-cobol-length: 5
+        premium:
+          type: number
+          format: decimal
+          x-decimal-scale: 2
+          x-cobol-field: COV-PREMIUM
+          x-cobol-picture: PIC S9(09)V99 COMP-3
+          x-cobol-offset: 71
+          x-cobol-length: 6
+        effectiveDate:
+          type: string
+          format: date
+          x-cobol-field: COV-EFFECTIVE-DATE
+          x-cobol-picture: PIC 9(08)
+          x-cobol-offset: 77
+          x-cobol-length: 8
+        expiryDate:
+          type: string
+          format: date
+          x-cobol-field: COV-EXPIRY-DATE
+          x-cobol-picture: PIC 9(08)
+          x-cobol-offset: 85
+          x-cobol-length: 8
+        status:
+          type: string
+          x-cobol-field: COV-STATUS
+          x-cobol-picture: PIC X(02)
+          x-cobol-offset: 93
+          x-cobol-length: 2
+        coinsurancePct:
+          type: integer
+          format: int32
+          x-cobol-field: COV-COINSURANCE-PCT
+          x-cobol-picture: PIC 9(03)
+          x-cobol-offset: 95
+          x-cobol-length: 3
+        ratingTerritory:
+          type: string
+          x-cobol-field: COV-RATING-TERRITORY
+          x-cobol-picture: PIC X(06)
+          x-cobol-offset: 98
+          x-cobol-length: 6
+        classCode:
+          type: string
+          x-cobol-field: COV-CLASS-CODE
+          x-cobol-picture: PIC X(05)
+          x-cobol-offset: 104
+          x-cobol-length: 5
