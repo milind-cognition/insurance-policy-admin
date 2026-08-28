@@ -17,8 +17,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Drives the legacy path and the mirror with the same population and compares
@@ -73,7 +76,13 @@ public final class ParityHarness {
                 () -> policyDocument(mirror.findPolicy("PAS-99999999")),
                 differences);
 
-        return new ParityReport(cases, differences);
+        List<ParityDifference> waived = differences.stream()
+                .filter(difference -> waivedCategories().contains(difference.category()))
+                .toList();
+        List<ParityDifference> defects = differences.stream()
+                .filter(difference -> !waivedCategories().contains(difference.category()))
+                .toList();
+        return new ParityReport(cases, defects, waived);
     }
 
     private int compare(String policyNumber, String operation,
@@ -105,6 +114,18 @@ public final class ParityHarness {
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("could not serialise a parity document", e);
         }
+    }
+
+    /**
+     * Categories someone has signed off as intended divergence, named through
+     * {@code -Dpas.parity.waived="renewal date arithmetic"}. Empty by default:
+     * nothing is forgiven unless a human said so and wrote down why.
+     */
+    private static Set<String> waivedCategories() {
+        String waived = System.getProperty("pas.parity.waived", "").trim();
+        return waived.isEmpty()
+                ? Set.of()
+                : Arrays.stream(waived.split(",")).map(String::trim).collect(Collectors.toSet());
     }
 
     @FunctionalInterface
