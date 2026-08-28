@@ -5,3 +5,5 @@ logs/
 .vscode/
 bin/
 obj/
+[Bb]in/
+[Oo]bj/
