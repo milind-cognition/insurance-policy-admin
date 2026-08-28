@@ -29,6 +29,7 @@
         <module>legacy</module>
         <module>mirror</module>
         <module>switch</module>
+        <module>parity</module>
     </modules>
 
     <dependencyManagement>
