@@ -32,4 +32,28 @@
             <artifactId>h2</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <!-- dropin/scripts/facade-against-both-backends.sh runs MirrorServer
+                 outside Maven and needs the runtime classpath to do it. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>mirror-classpath</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build-classpath</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${project.basedir}/../target/mirror-classpath.txt</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
