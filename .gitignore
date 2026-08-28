@@ -1,0 +1,9 @@
+target/
+logs/
+*.class
+.idea/
+.vscode/
+bin/
+obj/
+[Bb]in/
+[Oo]bj/

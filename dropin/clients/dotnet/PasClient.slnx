@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PasClient.Tests/PasClient.Tests.csproj" />
+  <Project Path="PasClient/PasClient.csproj" />
+</Solution>
