@@ -38,6 +38,9 @@ public final class MirrorDatabase {
         DriverManagerDataSource dataSource = new DriverManagerDataSource(jdbcUrl, "sa", "");
         dataSource.setDriverClassName("org.h2.Driver");
         MirrorDatabase database = new MirrorDatabase(dataSource);
+        // The mirror owns this database outright; starting it always starts from
+        // the DDL, so a demo can be re-run without leftovers deciding the answer.
+        database.jdbc.execute("DROP ALL OBJECTS");
         database.createSchema();
         return database;
     }
