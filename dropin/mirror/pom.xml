@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.acme.dropin</groupId>
+        <artifactId>dropin-parent</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>pas-mirror</artifactId>
+    <name>PAS mirror (Java 21 / Spring Boot 3)</name>
+    <description>
+        POLQRY and POLRNW reimplemented on Java 21 and an embedded database whose schema is
+        translated from sql/ddl/create-tables.sql, serving the same contract off-mainframe.
+    </description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.acme.dropin</groupId>
+            <artifactId>pas-contract</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+        </dependency>
+    </dependencies>
+</project>

@@ -27,6 +27,7 @@
     <modules>
         <module>contract</module>
         <module>legacy</module>
+        <module>mirror</module>
     </modules>
 
     <dependencyManagement>
