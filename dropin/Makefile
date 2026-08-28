@@ -14,14 +14,14 @@ DOTNET := $(shell command -v dotnet 2>/dev/null || echo $(HOME)/.dotnet/dotnet)
 
 setup:
 	$(MVN) install -DskipTests
-	$(DOTNET) build $(DROPIN)/clients/dotnet/PasClient.sln
+	$(DOTNET) build $(DROPIN)/clients/dotnet/PasClient.slnx
 
 test:
 	$(MVN) test
 	$(MAKE) dotnet-test
 
 dotnet-test:
-	$(DOTNET) test $(DROPIN)/clients/dotnet/PasClient.sln
+	$(DOTNET) test $(DROPIN)/clients/dotnet/PasClient.slnx
 
 # Runs the same JUnit gate the CI "parity" job runs, with the skip lifted.
 parity:
@@ -44,4 +44,4 @@ demo:
 
 clean:
 	$(MVN) clean
-	$(DOTNET) clean $(DROPIN)/clients/dotnet/PasClient.sln
+	$(DOTNET) clean $(DROPIN)/clients/dotnet/PasClient.slnx
