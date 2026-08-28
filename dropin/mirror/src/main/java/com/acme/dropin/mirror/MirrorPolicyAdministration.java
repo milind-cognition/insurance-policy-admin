@@ -30,7 +30,7 @@ public final class MirrorPolicyAdministration implements PasBackend {
 
     private static final BigDecimal RATE_INCREASE = new BigDecimal("1.05");
     private static final BigDecimal RATE_INCREASE_CAP = new BigDecimal("15.00");
-    private static final Set<String> RENEWABLE_STATUSES = Set.of("AC", "EX", "LP");
+    private static final Set<String> RENEWABLE_STATUSES = Set.of("AC", "EX");
     private static final int MAX_COVERAGES = 20;
 
     private static final String POLICY_COLUMNS = """
@@ -82,14 +82,14 @@ public final class MirrorPolicyAdministration implements PasBackend {
         }
 
         BigDecimal newPremium = policy.totalPremium().multiply(RATE_INCREASE)
-                .setScale(2, RoundingMode.HALF_UP);
+                .setScale(2, RoundingMode.DOWN);
         BigDecimal increasePct = newPremium.subtract(policy.totalPremium())
-                .divide(policy.totalPremium(), 4, RoundingMode.HALF_UP)
+                .divide(policy.totalPremium(), 4, RoundingMode.DOWN)
                 .multiply(BigDecimal.valueOf(100));
         if (increasePct.compareTo(RATE_INCREASE_CAP) > 0) {
             newPremium = policy.totalPremium()
                     .multiply(BigDecimal.ONE.add(RATE_INCREASE_CAP.movePointLeft(2)))
-                    .setScale(2, RoundingMode.HALF_UP);
+                    .setScale(2, RoundingMode.DOWN);
         }
 
         PasDate newEffective = policy.expiryDate();

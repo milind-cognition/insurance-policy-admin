@@ -77,7 +77,7 @@ class MirrorPolicyAdministrationTest {
         assertEquals("POLRNW", renewed.updatedBy());
         assertEquals(PasDate.of(20270301), renewed.expiryDate());
         // 502.74 * 1.05 = 527.877
-        assertEquals(new BigDecimal("527.88"), renewed.totalPremium());
+        assertEquals(new BigDecimal("527.87"), renewed.totalPremium());
     }
 
     @Test
